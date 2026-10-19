@@ -1,0 +1,31 @@
+{
+  "kind": "brainstorm-update",
+  "schemaVersion": 1,
+  "sourceProjectId": "VpDCweylBz",
+  "name": "Launch ideas",
+  "preset": "corporate",
+  "brainstorm": {
+    "id": "b-root",
+    "title": "Launch ideas",
+    "children": [
+      {
+        "id": "b-1",
+        "title": "Landing page before beta ends",
+        "children": [
+          { "id": "x-cta", "title": "Single clear CTA above the fold" },
+          { "id": "x-faq", "title": "Pricing FAQ section under the fold" }
+        ]
+      },
+      { "id": "b-2", "title": "Press kit for tech blogs" },
+      {
+        "id": "b-3",
+        "title": "Launch day livestream",
+        "children": [
+          { "id": "b-3a", "title": "Demo script" },
+          { "id": "x-rehearsal", "title": "Dry-run with support on Thursday" }
+        ]
+      },
+      { "id": "b-4", "title": "Post-launch retro within one week" }
+    ]
+  }
+}

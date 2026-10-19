@@ -1,0 +1,41 @@
+{
+  "kind": "project",
+  "schemaVersion": 1,
+  "app": { "minVersion": 4 },
+  "name": "Site photos",
+  "preset": "default",
+  "brainstorm": {
+    "id": "b-root",
+    "title": "Ideas",
+    "children": [
+      {
+        "id": "b-1",
+        "title": "Whiteboard",
+        "image": {
+          "asset": "sha256-9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "w": 640,
+          "h": 480
+        }
+      }
+    ]
+  },
+  "map": {
+    "id": "m-root",
+    "title": "Kitchen job",
+    "role": "theme",
+    "children": [
+      {
+        "id": "m-wall",
+        "title": "North wall",
+        "side": "right",
+        "tags": ["measure"],
+        "image": {
+          "asset": "sha256-2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae",
+          "w": 1600,
+          "h": 900,
+          "alt": "Photo of the north wall with the window"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+name: Pages
+
+# Publishes the app to GitHub Pages at https://huduzhu.github.io/mindmap/.
+# It runs only when started by hand (Actions -> Pages -> Run workflow), so pushes
+# to main never depend on Pages being set up. The build uses BASE_PATH so every
+# URL, the manifest and the service worker stay inside /mindmap/.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a newer run waits rather than cancelling a
+# deployment halfway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          BASE_PATH: /mindmap/
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

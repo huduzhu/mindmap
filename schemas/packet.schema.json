@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "packet.schema.json",
+  "title": "Analysis request packet (export-for-AI)",
+  "type": "object",
+  "required": [
+    "kind",
+    "schemaVersion",
+    "projectName",
+    "intent",
+    "depth",
+    "preset",
+    "payload",
+    "instructions"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "analysis-request" },
+    "schemaVersion": { "const": 1 },
+    "projectName": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "projectId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "intent": { "enum": ["expand", "convert", "improve"] },
+    "depth": { "enum": ["titles", "full"] },
+    "preset": { "$ref": "tree-node.schema.json#/$defs/presetRef" },
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "brainstorm": { "$ref": "tree-node.schema.json#/$defs/treeNode" },
+        "map": { "$ref": "tree-node.schema.json#/$defs/treeNode" }
+      }
+    },
+    "instructions": {
+      "type": "object",
+      "required": ["goal", "rules"],
+      "additionalProperties": false,
+      "properties": {
+        "goal": { "type": "string", "minLength": 1, "maxLength": 5000 },
+        "rules": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": { "type": "string", "maxLength": 1000 }
+        }
+      }
+    },
+    "returnContract": { "type": "string", "maxLength": 5000 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "intent": { "const": "expand" } } },
+      "then": { "required": ["payload"], "properties": { "payload": { "type": "object", "required": ["brainstorm"] } } }
+    },
+    {
+      "if": { "properties": { "intent": { "const": "convert" } } },
+      "then": { "required": ["payload"], "properties": { "payload": { "type": "object", "required": ["brainstorm"] } } }
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "kind": "template",
+  "schemaVersion": 1,
+  "sourceProjectId": "p-launch-ideas",
+  "name": "Launch ideas",
+  "preset": "corporate",
+  "root": {
+    "id": "m-root",
+    "title": "Launch ideas",
+    "role": "theme",
+    "children": [
+      {
+        "id": "m-prelaunch",
+        "title": "Pre-launch",
+        "role": "main-branch",
+        "side": "right",
+        "children": [
+          { "id": "m-landing", "title": "Landing page before beta ends", "role": "task" },
+          {
+            "id": "m-press",
+            "title": "Press outreach",
+            "role": "branch",
+            "children": [{ "id": "m-presskit", "title": "Press kit for tech blogs", "role": "task" }]
+          }
+        ]
+      },
+      {
+        "id": "m-launchday",
+        "title": "Launch day",
+        "role": "main-branch",
+        "side": "left",
+        "children": [
+          {
+            "id": "m-livestream",
+            "title": "Livestream",
+            "role": "branch",
+            "children": [
+              { "id": "m-demo", "title": "Demo script", "role": "task" },
+              { "id": "m-q-format", "title": "Live Q&A or scripted walkthrough?", "role": "question" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

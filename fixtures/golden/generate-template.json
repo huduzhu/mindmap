@@ -1,0 +1,55 @@
+{
+  "kind": "template",
+  "schemaVersion": 1,
+  "name": "Personal knowledge management",
+  "preset": "default",
+  "root": {
+    "id": "pkm-root",
+    "title": "Personal knowledge management",
+    "role": "theme",
+    "children": [
+      {
+        "id": "pkm-capture",
+        "title": "Capture",
+        "role": "main-branch",
+        "side": "right",
+        "children": [
+          { "id": "pkm-c1", "title": "Inbox: one trusted entry point", "role": "idea" },
+          { "id": "pkm-c2", "title": "Clip articles with highlights", "role": "task" },
+          { "id": "pkm-c3", "title": "Voice notes on the go", "role": "idea" }
+        ]
+      },
+      {
+        "id": "pkm-organize",
+        "title": "Organize",
+        "role": "main-branch",
+        "side": "left",
+        "children": [
+          { "id": "pkm-o1", "title": "Weekly review of the inbox", "role": "task" },
+          { "id": "pkm-o2", "title": "Tags over folders?", "role": "question" },
+          { "id": "pkm-o3", "title": "Risk: over-tagging becomes noise", "role": "risk" }
+        ]
+      },
+      {
+        "id": "pkm-connect",
+        "title": "Connect",
+        "role": "main-branch",
+        "side": "right",
+        "children": [
+          { "id": "pkm-n1", "title": "Link related notes on capture", "role": "idea" },
+          { "id": "pkm-n2", "title": "Monthly map of a big topic", "role": "task" }
+        ]
+      },
+      {
+        "id": "pkm-share",
+        "title": "Share",
+        "role": "main-branch",
+        "side": "left",
+        "children": [
+          { "id": "pkm-s1", "title": "Publish summaries, not dumps", "role": "idea" },
+          { "id": "pkm-s2", "title": "Export as interactive HTML", "role": "task" }
+        ]
+      }
+    ]
+  }
+}

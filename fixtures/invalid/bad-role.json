@@ -1,0 +1,13 @@
+{
+  "kind": "project",
+  "schemaVersion": 1,
+  "name": "Bad role fixture",
+  "preset": "default",
+  "brainstorm": { "id": "b-root", "title": "Ideas" },
+  "map": {
+    "id": "m-root",
+    "title": "Root",
+    "role": "guru",
+    "children": [{ "id": "m-1", "title": "A child", "role": "ninja" }]
+  }
+}

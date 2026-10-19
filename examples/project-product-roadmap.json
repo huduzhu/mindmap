@@ -1,0 +1,71 @@
+{
+  "kind": "project",
+  "schemaVersion": 1,
+  "name": "Product Roadmap Q4",
+  "preset": "handdrawn",
+  "brainstorm": {
+    "id": "br-root",
+    "title": "Roadmap ideas",
+    "children": [
+      { "id": "br-1", "title": "Offline sync across devices" },
+      {
+        "id": "br-2",
+        "title": "Shared team boards",
+        "children": [{ "id": "br-2a", "title": "Read-only share links first" }]
+      },
+      { "id": "br-3", "title": "Faster startup on low-end laptops" }
+    ]
+  },
+  "map": {
+    "id": "rm-root",
+    "title": "Product Roadmap Q4",
+    "role": "theme",
+    "notes": "Theme for the Q4 planning cycle. Owners: platform + growth.",
+    "children": [
+      {
+        "id": "rm-now",
+        "title": "Now",
+        "side": "right",
+        "role": "main-branch",
+        "children": [
+          {
+            "id": "rm-now-1",
+            "title": "Ship offline sync beta",
+            "role": "task",
+            "notes": "Depends on the sync engine spike."
+          },
+          { "id": "rm-now-2", "title": "Fix import error messages", "role": "task" },
+          { "id": "rm-now-3", "title": "Open question: pricing tiers?", "role": "question" }
+        ]
+      },
+      {
+        "id": "rm-next",
+        "title": "Next",
+        "side": "left",
+        "role": "main-branch",
+        "children": [
+          {
+            "id": "rm-next-1",
+            "title": "Shared team boards",
+            "role": "branch",
+            "children": [
+              { "id": "rm-next-1a", "title": "Read-only share links", "role": "task" }
+            ]
+          },
+          { "id": "rm-next-2", "title": "Startup performance pass", "role": "task" }
+        ]
+      },
+      {
+        "id": "rm-later",
+        "title": "Later",
+        "side": "left",
+        "role": "branch",
+        "collapsed": true,
+        "children": [
+          { "id": "rm-later-1", "title": "Plugin API", "role": "idea" },
+          { "id": "rm-later-2", "title": "Marketplace for presets", "role": "idea" }
+        ]
+      }
+    ]
+  }
+}

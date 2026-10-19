@@ -1,0 +1,40 @@
+{
+  "kind": "brainstorm-update",
+  "schemaVersion": 1,
+  "sourceProjectId": "p-launch-1",
+  "name": "Launch ideas",
+  "preset": "default",
+  "brainstorm": {
+    "id": "b-root",
+    "title": "Launch ideas",
+    "children": [
+      {
+        "id": "b-1",
+        "title": "Landing page before beta ends",
+        "children": [
+          { "id": "x-4kt9qa", "title": "Hero section with one clear CTA" },
+          { "id": "x-7mw2rz", "title": "Social proof strip: beta user quotes" },
+          { "id": "x-1pn6vd", "title": "Pricing teaser above the fold?" }
+        ]
+      },
+      {
+        "id": "b-2",
+        "title": "Press kit for tech blogs",
+        "children": [
+          { "id": "x-8hj3yc", "title": "One-paragraph boilerplate + screenshots" },
+          { "id": "x-5qb7tf", "title": "Founder story angle for pitches" },
+          { "id": "x-2rs9mk", "title": "Embargoed demo access for top 5 blogs" }
+        ]
+      },
+      { "id": "x-6vd4wl", "title": "Waitlist email sequence before launch week" },
+      {
+        "id": "b-3",
+        "title": "Launch-week momentum",
+        "children": [
+          { "id": "x-9tr2hn", "title": "Daily changelog thread during launch week" },
+          { "id": "x-4wq8zp", "title": "Ask-me-anything in the community channel" }
+        ]
+      }
+    ]
+  }
+}

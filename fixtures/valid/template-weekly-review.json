@@ -1,0 +1,34 @@
+{
+  "kind": "template",
+  "schemaVersion": 1,
+  "name": "Weekly Review",
+  "preset": "dark",
+  "root": {
+    "id": "t-root",
+    "title": "Weekly Review",
+    "role": "theme",
+    "children": [
+      {
+        "id": "t-wins",
+        "title": "Wins",
+        "side": "right",
+        "role": "main-branch",
+        "children": [{ "id": "t-w1", "title": "Shipped v1.2", "role": "idea" }]
+      },
+      {
+        "id": "t-blockers",
+        "title": "Blockers",
+        "side": "left",
+        "role": "main-branch",
+        "children": [{ "id": "t-b1", "title": "CI flaky on Windows", "role": "risk" }]
+      },
+      {
+        "id": "t-next",
+        "title": "Next week",
+        "side": "right",
+        "role": "main-branch",
+        "children": [{ "id": "t-n1", "title": "Draft Q4 roadmap", "role": "task" }]
+      }
+    ]
+  }
+}

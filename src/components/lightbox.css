@@ -1,0 +1,99 @@
+/* The image lightbox (#149, HC6); loaded with its chunk. */
+.dialog.lightbox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(1100px, calc(100vw - 32px));
+  height: min(860px, calc(100vh - 32px));
+  max-height: none;
+  overflow: hidden;
+  padding: 12px 14px;
+}
+
+.lightbox-bar,
+.lightbox-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dialog .lightbox-title {
+  flex: 1 1 200px;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lightbox-size {
+  font-size: 0.85em;
+}
+
+.lightbox-zoom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lightbox-percent {
+  min-width: 3.5em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.lightbox-close {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.lightbox-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 6px;
+  background:
+    repeating-conic-gradient(rgb(128 128 128 / 12%) 0 25%, transparent 0 50%) 0 0 / 16px 16px,
+    color-mix(in srgb, var(--mms-text, #333) 6%, transparent);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.lightbox-stage:active {
+  cursor: grabbing;
+}
+
+.lightbox-stage:focus-visible {
+  outline: 2px solid var(--mms-accent, #2563eb);
+  outline-offset: -2px;
+}
+
+.lightbox-stage img {
+  max-width: 100%;
+  max-height: 100%;
+  transform-origin: center;
+  will-change: transform;
+  pointer-events: none;
+}
+
+.lightbox-message {
+  margin: 0;
+}
+
+.lightbox-footer input {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lightbox-stage img {
+    transition: transform 60ms linear;
+  }
+}

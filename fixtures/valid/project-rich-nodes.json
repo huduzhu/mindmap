@@ -1,0 +1,43 @@
+{
+  "kind": "project",
+  "schemaVersion": 1,
+  "app": { "minVersion": 2 },
+  "name": "Kitchen install",
+  "preset": "default",
+  "brainstorm": {
+    "id": "b-root",
+    "title": "Install ideas",
+    "children": [
+      { "id": "b-1", "title": "Measure the walls", "role": "task", "done": true },
+      { "id": "b-2", "title": "Hot lead", "icon": "🔥", "color": 1 }
+    ]
+  },
+  "map": {
+    "id": "m-root",
+    "title": "Kitchen install",
+    "role": "theme",
+    "icon": "🏠",
+    "children": [
+      {
+        "id": "m-order",
+        "title": "Order",
+        "role": "main-branch",
+        "side": "right",
+        "color": 2,
+        "children": [
+          { "id": "m-tiles", "title": "Tiles", "role": "task", "done": true },
+          { "id": "m-taps", "title": "Taps", "role": "task", "icon": "⚠️" },
+          { "id": "m-bench", "title": "Benchtop", "role": "task", "color": 8 }
+        ]
+      },
+      {
+        "id": "m-fit",
+        "title": "Fit",
+        "role": "main-branch",
+        "side": "left",
+        "children": [{ "id": "m-plumber", "title": "Plumber", "role": "leaf", "icon": "🛠️" }]
+      }
+    ]
+  },
+  "links": [{ "from": "m-taps", "to": "m-plumber", "label": "needs" }]
+}
