@@ -1,0 +1,18 @@
+# Keeps the GitHub Actions in the workflows and the npm dependencies
+# current (#59, C1). Minor and patch npm updates arrive as one grouped pull
+# request a week; majors come one by one so each can be reviewed.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch

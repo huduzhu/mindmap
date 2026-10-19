@@ -1,0 +1,16 @@
+# Generated or vendored
+package-lock.json
+node_modules
+dist
+dist-viewer
+public/viewer
+release
+
+# Data files are golden or hand-formatted; reflowing them only adds noise (C2).
+fixtures
+presets
+schemas
+examples
+
+# Prose: prettier's Markdown reflow creates large diffs for no gain.
+*.md

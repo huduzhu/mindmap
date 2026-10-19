@@ -1,0 +1,43 @@
+{
+  "kind": "project",
+  "schemaVersion": 1,
+  "name": "Product Launch",
+  "preset": "corporate",
+  "brainstorm": {
+    "id": "b-root",
+    "title": "Launch ideas",
+    "children": [
+      { "id": "b-1", "title": "Landing page before beta ends" },
+      { "id": "b-2", "title": "Press kit for tech blogs" },
+      { "id": "b-3", "title": "Launch day livestream", "children": [{ "id": "b-3a", "title": "Demo script" }] }
+    ]
+  },
+  "map": {
+    "id": "m-root",
+    "title": "Product Launch",
+    "role": "theme",
+    "children": [
+      {
+        "id": "m-marketing",
+        "title": "Marketing",
+        "side": "right",
+        "role": "main-branch",
+        "children": [
+          { "id": "m-m1", "title": "Landing page", "role": "task" },
+          { "id": "m-m2", "title": "Press kit", "role": "task" }
+        ]
+      },
+      {
+        "id": "m-product",
+        "title": "Product",
+        "side": "left",
+        "role": "main-branch",
+        "children": [
+          { "id": "m-p1", "title": "Onboarding polish", "role": "task" },
+          { "id": "m-p2", "title": "Open question: pricing tier?", "role": "question" }
+        ]
+      }
+    ]
+  },
+  "updatedAt": "2026-09-01T00:00:00Z"
+}

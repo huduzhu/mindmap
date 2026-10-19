@@ -1,0 +1,31 @@
+/* The picture in the details panel (#149). */
+.node-details-image .node-thumb {
+  max-width: 100%;
+  color: var(--mms-text, #1c1b1f);
+}
+
+.node-details-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.node-details-image-actions button {
+  font-size: 0.85rem;
+}
+
+.node-details-image-alt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.85rem;
+}
+
+.node-details-image-alt input {
+  font: inherit;
+  padding: 5px 8px;
+  border: 1px solid var(--mms-node-border, #ccc);
+  border-radius: 6px;
+  background: var(--mms-node-fill, #fff);
+  color: var(--mms-text, #1c1b1f);
+}

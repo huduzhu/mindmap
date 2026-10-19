@@ -1,0 +1,26 @@
+{
+  "kind": "preset",
+  "schemaVersion": 1,
+  "name": "corporate",
+  "palette": {
+    "background": "#ffffff",
+    "text": "#1e293b",
+    "mutedText": "#5b6b80",
+    "nodeFill": "#f1f5f9",
+    "nodeBorder": "#cbd5e1",
+    "edge": "#64748b",
+    "branchColors": ["#0f766e", "#0369a1", "#4f46e5", "#7c3aed", "#b91c1c", "#a16207"]
+  },
+  "roles": {
+    "theme": { "fill": "#0f172a", "text": "#ffffff", "fontWeight": "bold", "shape": "box" },
+    "main-branch": { "fontWeight": "bold" },
+    "branch": {},
+    "leaf": {},
+    "task": { "fill": "#b91c1c", "text": "#ffffff", "shape": "box" },
+    "idea": { "fill": "#0f766e", "text": "#ffffff", "shape": "box" },
+    "question": { "fill": "#4f46e5", "text": "#ffffff", "shape": "box" },
+    "risk": { "fill": "#a16207", "text": "#ffffff", "shape": "box" }
+  },
+  "font": { "family": "'Segoe UI', system-ui, sans-serif", "baseSize": 14, "titleScale": 1.4 },
+  "edges": { "curve": "smoothstep", "width": 2, "dashed": false }
+}

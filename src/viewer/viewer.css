@@ -1,0 +1,220 @@
+html,
+body,
+#mms-root {
+  margin: 0;
+  height: 100%;
+}
+
+.mms-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
+  font-family: system-ui, 'Segoe UI', sans-serif;
+}
+
+.mms-viewer-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+}
+
+.mms-viewer-title {
+  font-size: 1rem;
+}
+
+.mms-viewer-search {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid rgb(128 128 128 / 45%);
+  border-radius: 999px;
+  background: rgb(128 128 128 / 8%);
+  color: inherit;
+  min-width: 160px;
+}
+
+.mms-viewer-hint {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.mms-viewer-present {
+  margin-left: auto;
+  font: inherit;
+  padding: 4px 12px;
+  border: 1px solid rgb(128 128 128 / 45%);
+  border-radius: 999px;
+  background: rgb(128 128 128 / 8%);
+  color: inherit;
+  cursor: pointer;
+}
+
+.mms-viewer-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Node chrome (mirrors the app's map-node classes) */
+
+.map-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 6px 12px;
+  box-sizing: border-box;
+  text-align: center;
+  /* line-height and wrapping must match nodeSize() in src/map/layout.ts (#72). */
+  line-height: 1.35;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  cursor: pointer;
+}
+
+.map-node-title {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  /* Titles past MAX_LINE_COUNT lines end in an ellipsis instead of being cut. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 8;
+  line-clamp: 8;
+}
+
+.map-handle {
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.map-node-toggle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgb(128 128 128 / 60%);
+  background: rgb(255 255 255 / 92%);
+  color: #555;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 5;
+}
+
+.map-node-toggle-right {
+  right: -9px;
+}
+
+.map-node-toggle-left {
+  left: -9px;
+}
+
+/* Notes popover */
+
+.mms-notes-card {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  max-height: 45%;
+  overflow-y: auto;
+  background: #fff;
+  color: #1f2937;
+  border-radius: 10px;
+  border: 1px solid rgb(0 0 0 / 12%);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
+  padding: 12px 14px;
+  z-index: 20;
+}
+
+.mms-notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mms-notes-head button {
+  font: inherit;
+  border: none;
+  background: transparent;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 2px 6px;
+}
+
+.mms-notes-content {
+  margin: 8px 0 0;
+}
+
+.mms-notes-content p,
+.node-details-notes-preview p {
+  margin: 0 0 8px;
+}
+
+.mms-notes-content p:last-child,
+.node-details-notes-preview p:last-child {
+  margin-bottom: 0;
+}
+
+.mms-notes-content code,
+.node-details-notes-preview code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgb(128 128 128 / 15%);
+}
+
+/* A picture shown larger (#149): click anywhere or press Esc to close. */
+.mms-image-view {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgb(0 0 0 / 82%);
+  cursor: zoom-out;
+}
+
+.mms-image-view img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 40%);
+}
+
+.mms-image-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 90%);
+  color: #111827;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}

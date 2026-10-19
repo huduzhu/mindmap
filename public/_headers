@@ -1,0 +1,12 @@
+# Security headers for hosts that read a _headers file (Netlify, Cloudflare
+# Pages). The production build also puts the same Content-Security-Policy, minus
+# frame-ancestors, into index.html as a <meta> tag (vite.config.ts reads it from
+# here), so hosts without header support still get it. See README → Hosting.
+#
+# 'unsafe-eval': Ajv compiles the bundled JSON schemas into functions at run time
+# (only the app's own schemas, never user text). connect-src data:/blob: lets
+# the PNG/SVG export (html-to-image) fetch the map's own images and fonts.
+/*
+  Content-Security-Policy: default-src 'self'; connect-src 'self' data: blob: https://api.github.com; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-eval'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer

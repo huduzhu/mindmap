@@ -1,0 +1,153 @@
+/* Presentation mode (#152), shared by the app and the HTML export's viewer. */
+.present-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+}
+
+.present-canvas,
+.present-canvas .react-flow {
+  position: absolute;
+  inset: 0;
+}
+
+.present-stage .react-flow__node {
+  transition: opacity 300ms ease;
+  cursor: pointer;
+}
+
+.present-stage .react-flow__edge {
+  pointer-events: none;
+}
+
+.present-stage .react-flow__edge path {
+  transition: opacity 300ms ease;
+}
+
+/* The current node's ring: the preset's text colour on a halo of its background, so it shows
+   on light and dark presets alike. */
+.present-stage .present-current .map-node {
+  outline: 3px solid var(--present-ring);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px var(--present-halo);
+}
+
+.present-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  max-width: min(720px, calc(100% - 32px));
+  max-height: 30vh;
+  overflow: auto;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 78%);
+  color: #fff;
+  font-size: 1.05rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  cursor: default;
+}
+
+.present-blank {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+.present-hud {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 55%);
+  color: #fff;
+  font:
+    0.85rem/1.2 system-ui,
+    sans-serif;
+  opacity: 0;
+  transition: opacity 400ms ease;
+  cursor: default;
+}
+
+.present-hud-shown .present-hud,
+.present-hud:hover,
+.present-hud:focus-within {
+  opacity: 1;
+}
+
+.present-progress {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: rgb(127 127 127 / 30%);
+}
+
+.present-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--present-ring);
+  transition: width 300ms ease;
+}
+
+.present-counter {
+  min-width: 4.5em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.present-button {
+  min-width: 32px;
+  min-height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.present-button:hover:not(:disabled),
+.present-button:focus-visible {
+  background: rgb(255 255 255 / 20%);
+}
+
+.present-button:focus-visible {
+  outline: 2px solid #fff;
+}
+
+.present-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.present-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .present-stage .react-flow__node,
+  .present-stage .react-flow__edge path,
+  .present-hud,
+  .present-progress > span {
+    transition: none;
+  }
+}

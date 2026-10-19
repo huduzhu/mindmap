@@ -1,0 +1,251 @@
+{
+  "kind": "project",
+  "schemaVersion": 1,
+  "name": "Getting started · 入门指南",
+  "preset": "system",
+  "tags": [
+    "guide"
+  ],
+  "brainstorm": {
+    "id": "gs-105",
+    "title": "Ideas · 想法",
+    "children": [
+      {
+        "id": "gs-101",
+        "title": "Type an idea and press Enter · 输入想法后按回车"
+      },
+      {
+        "id": "gs-103",
+        "title": "Tab nests it under the one above · Tab 键将其归入上一条",
+        "children": [
+          {
+            "id": "gs-102",
+            "title": "Like this · 就像这样"
+          }
+        ]
+      },
+      {
+        "id": "gs-104",
+        "title": "Drag rows to reorder · 拖动行可重新排序"
+      }
+    ]
+  },
+  "map": {
+    "id": "gs-32",
+    "title": "Getting started · 入门指南",
+    "notes": "**Welcome!** This map is a guided tour. Select any node and read its notes here.\n\n**欢迎！** 这张导图带你快速上手。选中任意节点，即可在此查看说明。\n\nIt is an ordinary project: edit it, break it, delete it. Start screen → *Try the guide* makes a fresh copy.\n\n这是一个普通项目：可以随意修改或删除。在开始页点击 *Try the guide* 可重新获得一份。",
+    "role": "theme",
+    "children": [
+      {
+        "id": "gs-6",
+        "title": "Build the map · 编辑导图",
+        "notes": "Keyboard first: select a node, then use the keys below.\n\n以键盘为主：先选中节点，再使用下列快捷键。",
+        "side": "right",
+        "role": "main-branch",
+        "children": [
+          {
+            "id": "gs-1",
+            "title": "Tab — add a child · 添加子节点",
+            "role": "task"
+          },
+          {
+            "id": "gs-2",
+            "title": "Enter — add a sibling · 添加同级节点",
+            "role": "task"
+          },
+          {
+            "id": "gs-3",
+            "title": "F2 or double-click — rename · 重命名",
+            "role": "task"
+          },
+          {
+            "id": "gs-4",
+            "title": "Del — remove · 删除",
+            "role": "task"
+          },
+          {
+            "id": "gs-5",
+            "title": "Ctrl+Z / Ctrl+Y — undo, redo · 撤销、重做",
+            "role": "task"
+          },
+          {
+            "id": "gs-108",
+            "title": "Ctrl+Enter — tick a task done · 勾选任务完成",
+            "role": "task",
+            "done": true,
+            "notes": "A task shows a checkbox; its branch counts how many are done.\n\n任务带有复选框，其上级分支会显示完成数量。"
+          }
+        ]
+      },
+      {
+        "id": "gs-14",
+        "title": "Arrange · 整理结构",
+        "side": "right",
+        "role": "main-branch",
+        "children": [
+          {
+            "id": "gs-7",
+            "title": "Arrow keys — move the selection · 方向键切换选中"
+          },
+          {
+            "id": "gs-8",
+            "title": "Drag a node onto another to move it · 拖动节点即可移动"
+          },
+          {
+            "id": "gs-9",
+            "title": "Ctrl+] / Ctrl+[ — indent, outdent · 缩进、取消缩进"
+          },
+          {
+            "id": "gs-11",
+            "title": "Space — fold or unfold · 折叠或展开",
+            "collapsed": true,
+            "children": [
+              {
+                "id": "gs-10",
+                "title": "You unfolded me! · 你展开了我！",
+                "role": "idea"
+              }
+            ]
+          },
+          {
+            "id": "gs-106",
+            "title": "Alt+, / Alt+. / Alt+1…3 — collapse all, expand all, show levels · 全部折叠、全部展开、显示层级"
+          },
+          {
+            "id": "gs-107",
+            "title": "Alt+→ — focus on a branch, Esc to come back · 聚焦分支，按 Esc 返回"
+          },
+          {
+            "id": "gs-152",
+            "title": "F5 — present the map one step at a time, Esc to stop · 逐步演示导图，按 Esc 退出"
+          },
+          {
+            "id": "gs-12",
+            "title": "Alt+Shift+S — flip a branch to the other side · 切换分支方向"
+          },
+          {
+            "id": "gs-13",
+            "title": "Esc — deselect · 取消选中"
+          }
+        ]
+      },
+      {
+        "id": "gs-18",
+        "title": "Keep your work safe · 保护你的数据",
+        "notes": "Everything is stored in **this browser only**. Back up now and then.\n\n所有内容**只保存在本浏览器中**，请定期备份。",
+        "side": "right",
+        "role": "main-branch",
+        "children": [
+          {
+            "id": "gs-15",
+            "title": "Saves automatically · 自动保存"
+          },
+          {
+            "id": "gs-16",
+            "title": "Snapshots — named restore points · 快照：命名还原点"
+          },
+          {
+            "id": "gs-17",
+            "title": "Start screen → Back up all projects (ZIP) · 开始页 → 备份所有项目",
+            "role": "risk"
+          }
+        ]
+      },
+      {
+        "id": "gs-23",
+        "title": "Views · 视图",
+        "side": "left",
+        "role": "main-branch",
+        "children": [
+          {
+            "id": "gs-19",
+            "title": "Mind Map — this canvas · 导图：当前画布"
+          },
+          {
+            "id": "gs-20",
+            "title": "Brainstorm — jot rough ideas · 头脑风暴：记录零散想法"
+          },
+          {
+            "id": "gs-21",
+            "title": "Outline — the map as a list · 大纲：以列表查看"
+          },
+          {
+            "id": "gs-22",
+            "title": "Split view — two at once · 分屏：同时查看两个视图"
+          }
+        ]
+      },
+      {
+        "id": "gs-26",
+        "title": "Notes & details · 备注与详情",
+        "side": "left",
+        "role": "main-branch",
+        "children": [
+          {
+            "id": "gs-24",
+            "title": "Select a node to edit its notes · 选中节点即可编辑备注",
+            "notes": "Notes support **bold**, *italic*, `code`, lists and [links](https://example.com).\n\n备注支持**粗体**、*斜体*、`代码`、列表和链接。"
+          },
+          {
+            "id": "gs-25",
+            "title": "Roles and sides are set there too · 角色和方向也在这里设置",
+            "role": "question"
+          },
+          {
+            "id": "gs-109",
+            "title": "Node menu → Colour… and Marker… · 节点菜单 → 颜色和标记",
+            "color": 2,
+            "icon": "🎨"
+          },
+          {
+            "id": "gs-150",
+            "title": "End a title with #tag to tag the node · 标题末尾输入 #标签 即可加标签",
+            "notes": "Typing \"Fix login #p1 #backend\" while renaming saves the title \"Fix login\" with the tags p1 and backend. The details panel and the node menu's Tags… edit them too.\n\n重命名时输入“修复登录 #p1 #后台”，保存后标题为“修复登录”，并带有标签 p1 和 后台。详情面板和节点菜单的“标签…”也可以编辑标签。",
+            "tags": ["guide"]
+          }
+        ]
+      },
+      {
+        "id": "gs-31",
+        "title": "Find & share · 查找与分享",
+        "side": "left",
+        "role": "main-branch",
+        "children": [
+          {
+            "id": "gs-27",
+            "title": "Ctrl+K — every command · 命令面板"
+          },
+          {
+            "id": "gs-28",
+            "title": "Ctrl+F — search box, Enter jumps to the next node · 搜索框，Enter 跳到下一个"
+          },
+          {
+            "id": "gs-151",
+            "title": "Tags — dim or hide what is not tagged; search #tag · 标签：变暗或隐藏未带标签的节点；搜索 #标签",
+            "tags": ["guide"]
+          },
+          {
+            "id": "gs-106b",
+            "title": "Ctrl+I — show or hide the details panel · 显示或隐藏详情面板"
+          },
+          {
+            "id": "gs-29",
+            "title": "Export — JSON, Markdown, PNG, SVG, HTML · 导出多种格式"
+          },
+          {
+            "id": "gs-30",
+            "title": "Export for AI — let an LLM expand your ideas · 交给 AI 扩展想法",
+            "role": "idea"
+          }
+        ]
+      }
+    ]
+  },
+  "links": [
+    {
+      "from": "gs-16",
+      "to": "gs-17",
+      "label": "Double-click a link to label it · 双击链接添加标签"
+    }
+  ]
+}

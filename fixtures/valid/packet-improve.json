@@ -1,0 +1,59 @@
+{
+  "kind": "analysis-request",
+  "schemaVersion": 1,
+  "projectName": "Product Launch",
+  "projectId": "p-launch-1",
+  "intent": "improve",
+  "depth": "full",
+  "preset": "corporate",
+  "payload": {
+    "brainstorm": {
+      "id": "b-root",
+      "title": "Launch ideas",
+      "children": [
+        { "id": "b-1", "title": "Landing page before beta ends" },
+        { "id": "b-2", "title": "Press kit for tech blogs" },
+        { "id": "b-3", "title": "Launch day livestream", "children": [{ "id": "b-3a", "title": "Demo script" }] }
+      ]
+    },
+    "map": {
+      "id": "m-root",
+      "title": "Product Launch",
+      "role": "theme",
+      "children": [
+        {
+          "id": "m-marketing",
+          "title": "Marketing",
+          "side": "right",
+          "role": "main-branch",
+          "notes": "Owned by the growth team",
+          "children": [
+            { "id": "m-m1", "title": "Landing page", "role": "task" },
+            { "id": "m-m2", "title": "Press kit", "role": "task" }
+          ]
+        },
+        {
+          "id": "m-product",
+          "title": "Product",
+          "side": "left",
+          "role": "main-branch",
+          "children": [
+            { "id": "m-p1", "title": "Onboarding polish", "role": "task" },
+            { "id": "m-p2", "title": "Open question: pricing tier?", "role": "question" }
+          ]
+        }
+      ]
+    }
+  },
+  "instructions": {
+    "goal": "Improve this project: sharpen titles, tighten grouping, and upgrade notes where they exist. Preserve the overall shape.",
+    "rules": [
+      "Keep every existing node id exactly as provided.",
+      "Titles must stay under 200 characters.",
+      "Use only these roles: theme, main-branch, branch, leaf, task, idea, question, risk.",
+      "You may rewrite titles and notes, and re-parent nodes when it clearly helps.",
+      "Do not remove ideas unless they are exact duplicates."
+    ]
+  },
+  "returnContract": "Return ONE JSON file: a full project document (kind \"project\") with both trees updated and all node ids preserved. Set \"sourceProjectId\" to \"p-launch-1\"."
+}

@@ -1,0 +1,32 @@
+{
+  "kind": "analysis-request",
+  "schemaVersion": 1,
+  "projectName": "Launch ideas",
+  "projectId": "p-launch-1",
+  "intent": "expand",
+  "depth": "titles",
+  "preset": "default",
+  "payload": {
+    "brainstorm": {
+      "id": "b-root",
+      "title": "Launch ideas",
+      "children": [
+        { "id": "b-1", "title": "Landing page before beta ends" },
+        { "id": "b-2", "title": "Press kit for tech blogs" }
+      ]
+    }
+  },
+  "instructions": {
+    "goal": "Expand this brainstorm with more ideas. Add new bullets where they genuinely help; keep the voice concise and practical.",
+    "rules": [
+      "Keep every existing node id exactly as provided.",
+      "Titles must stay under 200 characters.",
+      "Use only these roles: theme, main-branch, branch, leaf, task, idea, question, risk.",
+      "Only titles were provided; do not invent notes for existing nodes.",
+      "Append-only: never delete, rename, or re-parent existing nodes.",
+      "New nodes get fresh ids and attach under the most relevant existing node.",
+      "Return only the brainstorm tree; the update document has no map field."
+    ]
+  },
+  "returnContract": "Return ONE JSON file: a brainstorm-update document (kind \"brainstorm-update\") with the expanded brainstorm tree and all original node ids preserved. Set \"sourceProjectId\" to \"p-launch-1\". Do not include a map."
+}

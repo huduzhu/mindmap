@@ -1,0 +1,26 @@
+{
+  "kind": "preset",
+  "schemaVersion": 1,
+  "name": "default",
+  "palette": {
+    "background": "#f8fafc",
+    "text": "#0f172a",
+    "mutedText": "#64748b",
+    "nodeFill": "#ffffff",
+    "nodeBorder": "#cbd5e1",
+    "edge": "#94a3b8",
+    "branchColors": ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"]
+  },
+  "roles": {
+    "theme": { "fill": "#1d4ed8", "text": "#ffffff", "fontWeight": "bold", "shape": "rounded" },
+    "main-branch": { "fontWeight": "bold" },
+    "branch": {},
+    "leaf": {},
+    "task": { "fill": "#f59e0b", "text": "#111827", "shape": "pill" },
+    "idea": { "fill": "#10b981", "text": "#ffffff", "shape": "pill" },
+    "question": { "fill": "#8b5cf6", "text": "#ffffff", "shape": "pill" },
+    "risk": { "fill": "#ef4444", "text": "#ffffff", "shape": "pill" }
+  },
+  "font": { "family": "system-ui, 'Segoe UI', sans-serif", "baseSize": 14, "titleScale": 1.5 },
+  "edges": { "curve": "smoothstep", "width": 2, "dashed": false }
+}

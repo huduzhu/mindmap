@@ -1,0 +1,26 @@
+{
+  "kind": "preset",
+  "schemaVersion": 1,
+  "name": "handdrawn",
+  "palette": {
+    "background": "#fdf6e3",
+    "text": "#3f3f37",
+    "mutedText": "#706b5c",
+    "nodeFill": "#fffdf5",
+    "nodeBorder": "#5b5340",
+    "edge": "#7a6f57",
+    "branchColors": ["#e07a5f", "#3d7068", "#f2b134", "#5f6caf", "#b4436c", "#2a9d8f"]
+  },
+  "roles": {
+    "theme": { "fill": "#f2b134", "text": "#3f3f37", "fontWeight": "bold", "shape": "box" },
+    "main-branch": { "fontWeight": "bold", "shape": "box" },
+    "branch": { "shape": "box" },
+    "leaf": { "shape": "box" },
+    "task": { "fill": "#e07a5f", "text": "#fffdf5", "shape": "box" },
+    "idea": { "fill": "#2a9d8f", "text": "#fffdf5", "shape": "box" },
+    "question": { "fill": "#5f6caf", "text": "#fffdf5", "shape": "box" },
+    "risk": { "fill": "#b4436c", "text": "#fffdf5", "shape": "box" }
+  },
+  "font": { "family": "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive", "baseSize": 14, "titleScale": 1.5 },
+  "edges": { "curve": "bezier", "width": 2, "dashed": true }
+}

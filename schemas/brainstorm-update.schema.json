@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "brainstorm-update.schema.json",
+  "title": "Brainstorm update (expand round-trip return document)",
+  "type": "object",
+  "required": ["kind", "schemaVersion", "sourceProjectId", "name", "preset", "brainstorm"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "brainstorm-update" },
+    "schemaVersion": { "const": 1 },
+    "sourceProjectId": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "preset": { "$ref": "tree-node.schema.json#/$defs/presetRef" },
+    "brainstorm": { "$ref": "tree-node.schema.json#/$defs/treeNode" }
+  }
+}

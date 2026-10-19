@@ -1,0 +1,50 @@
+{
+  "kind": "template",
+  "schemaVersion": 1,
+  "name": "Meeting Prep",
+  "preset": "corporate",
+  "root": {
+    "id": "mp-root",
+    "title": "Meeting Prep",
+    "role": "theme",
+    "children": [
+      {
+        "id": "mp-goal",
+        "title": "Goal",
+        "side": "right",
+        "role": "main-branch",
+        "children": [
+          { "id": "mp-goal-1", "title": "Decide the launch date", "role": "question" }
+        ]
+      },
+      {
+        "id": "mp-agenda",
+        "title": "Agenda",
+        "side": "right",
+        "role": "main-branch",
+        "children": [
+          { "id": "mp-a1", "title": "Metrics review", "role": "task" },
+          { "id": "mp-a2", "title": "Risks and open questions", "role": "question" }
+        ]
+      },
+      {
+        "id": "mp-attendees",
+        "title": "Attendees",
+        "side": "left",
+        "role": "main-branch",
+        "children": [
+          { "id": "mp-at1", "title": "Product and engineering leads", "role": "leaf" }
+        ]
+      },
+      {
+        "id": "mp-followup",
+        "title": "Follow-ups",
+        "side": "left",
+        "role": "main-branch",
+        "children": [
+          { "id": "mp-f1", "title": "Owner for every action item", "role": "task" }
+        ]
+      }
+    ]
+  }
+}

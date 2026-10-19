@@ -1,0 +1,31 @@
+{
+  "kind": "project",
+  "schemaVersion": 1,
+  "app": { "minVersion": 3 },
+  "name": "Launch plan",
+  "preset": "default",
+  "tags": ["Work"],
+  "brainstorm": {
+    "id": "b-root",
+    "title": "Launch ideas",
+    "children": [{ "id": "b-1", "title": "Price check", "tags": ["q4", "pricing"] }]
+  },
+  "map": {
+    "id": "m-root",
+    "title": "Launch plan",
+    "role": "theme",
+    "children": [
+      {
+        "id": "m-backend",
+        "title": "Backend",
+        "role": "main-branch",
+        "side": "right",
+        "tags": ["backend"],
+        "children": [
+          { "id": "m-login", "title": "Fix login", "role": "task", "tags": ["p1", "backend"] },
+          { "id": "m-region", "title": "Regional rollout", "tags": ["区域/华东", "team_a-1"] }
+        ]
+      }
+    ]
+  }
+}
