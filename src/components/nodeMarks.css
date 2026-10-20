@@ -1,0 +1,293 @@
+/*
+ * Marks around a node's title (#148): task checkbox, progress chip. Shared by
+ * the app and the HTML viewer. The sizes must match marksWidth() in
+ * src/map/layout.ts. Colours follow the node's own text colour, so they read
+ * on every preset and in dark mode.
+ */
+
+.node-check {
+  flex: none;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin: 0 6px 0 0;
+  padding: 0;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+span.node-check {
+  cursor: default;
+}
+
+.node-check > span {
+  visibility: hidden;
+}
+
+.node-check-done > span {
+  visibility: visible;
+}
+
+.node-check:focus-visible {
+  outline: 2px solid var(--mms-accent, #2563eb);
+  outline-offset: 1px;
+}
+
+.node-progress {
+  flex: none;
+  box-sizing: border-box;
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid color-mix(in srgb, currentColor 45%, transparent);
+  border-radius: 999px;
+  font-size: 0.75em;
+  font-weight: normal;
+  line-height: 1.35;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * On a map node the chip sits under the title: the node is taller by the
+ * chip's height (nodeSize() in src/map/layout.ts), never wider.
+ */
+.map-node-has-progress {
+  padding-bottom: calc(6px + 0.75em * 1.35 + 2px);
+}
+
+.map-node-progress {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  line-height: 1.35;
+}
+
+.node-progress-complete {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.map-node-done .map-node-title,
+.outliner-row-done .outliner-title {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.map-node-done .node-check {
+  opacity: 0.75;
+}
+
+.node-icon {
+  flex: none;
+  margin-right: 4px;
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+}
+
+/* Colour marker in Outline and Brainstorm rows (#148b). */
+.row-accent {
+  flex: none;
+  align-self: stretch;
+  width: 4px;
+  min-height: 1em;
+  margin-right: 6px;
+  border-radius: 2px;
+}
+
+/*
+ * Node tags (#150): chips under the title on the map (nodeSize() in
+ * src/map/layout.ts reserves the row) and after the title in rows.
+ */
+.node-tags {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: normal;
+  font-style: normal;
+  text-decoration: none;
+}
+
+.node-tag {
+  flex: none;
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 1px solid var(--tag-color, currentColor);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--tag-color, currentColor) 18%, transparent);
+  font-size: 0.7em;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.node-tag-more {
+  border-style: dashed;
+  background: transparent;
+}
+
+.map-node-has-tags {
+  padding-bottom: calc(6px + 0.7em * 1.35 + 2px + 3px);
+}
+
+.map-node-tags {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  justify-content: center;
+}
+
+.map-node-has-tags.map-node-has-progress {
+  padding-bottom: calc(6px + 0.75em * 1.35 + 2px + 0.7em * 1.35 + 2px + 3px);
+}
+
+.map-node-has-tags .map-node-progress {
+  bottom: calc(4px + 0.7em * 1.35 + 2px + 3px);
+}
+
+.row-tags {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.row-tags .node-tag {
+  font-size: 0.78em;
+}
+
+/* "+2 tagged": matches of the tag filter inside a folded branch (#150). */
+.node-tag-hits {
+  flex: none;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--mms-accent, #2563eb);
+  color: #fff;
+  font-size: 0.7em;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.map-node-tag-hits {
+  position: absolute;
+  top: -9px;
+  right: -6px;
+  margin: 0;
+}
+
+/* The tag filter's highlight mode (#150, HB-D2). */
+.react-flow__node.tag-path,
+.outliner-row.tag-path {
+  opacity: 0.6;
+}
+
+.react-flow__node.tag-dim,
+.outliner-row.tag-dim {
+  opacity: 0.25;
+}
+
+.react-flow__edge.tag-path {
+  opacity: 0.6;
+}
+
+.react-flow__edge.tag-dim {
+  opacity: 0.25;
+}
+
+/*
+ * Node images (#149): the thumbnail sits above the title. nodeSize() in
+ * src/map/layout.ts reserves its height plus a 4px gap from the image's w/h,
+ * and MapNode pads the top by the same amount.
+ */
+.node-thumb {
+  display: block;
+  box-sizing: border-box;
+  border-radius: 4px;
+  overflow: hidden;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.node-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+span.node-thumb-open {
+  cursor: zoom-in;
+}
+
+.node-thumb-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: 1px dashed color-mix(in srgb, currentColor 35%, transparent);
+  outline-offset: -1px;
+}
+
+.node-thumb-missing {
+  padding: 2px 6px;
+  font-size: 0.7em;
+  font-weight: normal;
+  line-height: 1.35;
+  opacity: 0.75;
+}
+
+.map-node-image {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* The picture marker after a row's title (#149), with a preview on hover or focus. */
+.row-image {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  margin-left: 6px;
+}
+
+.row-image-marker {
+  padding: 0 3px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  font: inherit;
+  line-height: 1.2;
+  cursor: zoom-in;
+}
+
+.row-image-marker:hover,
+.row-image-marker:focus-visible {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.row-image-preview {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 20;
+  padding: 4px;
+  border: 1px solid var(--mms-node-border, #cbd5e1);
+  border-radius: 6px;
+  background: var(--mms-node-fill, #fff);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 18%);
+  pointer-events: none;
+}

@@ -1,0 +1,17 @@
+{
+  "kind": "preset",
+  "schemaVersion": 1,
+  "name": "bad-hex",
+  "palette": {
+    "background": "blue",
+    "text": "#0f172a",
+    "mutedText": "#64748b",
+    "nodeFill": "#ffffff",
+    "nodeBorder": "#cbd5e1",
+    "edge": "#94a3b8",
+    "branchColors": ["#3b82f6", "#10b981", "#f59e0b"]
+  },
+  "roles": {},
+  "font": { "family": "system-ui", "baseSize": 14, "titleScale": 1.5 },
+  "edges": { "curve": "smoothstep", "width": 2, "dashed": false }
+}

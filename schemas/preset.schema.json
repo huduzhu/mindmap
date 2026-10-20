@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "preset.schema.json",
+  "title": "Style preset",
+  "type": "object",
+  "required": ["kind", "schemaVersion", "name", "palette", "roles", "font", "edges"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "preset" },
+    "schemaVersion": { "const": 1 },
+    "name": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+    "palette": {
+      "type": "object",
+      "required": [
+        "background",
+        "text",
+        "mutedText",
+        "nodeFill",
+        "nodeBorder",
+        "edge",
+        "branchColors"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "background": { "$ref": "#/$defs/hex" },
+        "text": { "$ref": "#/$defs/hex" },
+        "mutedText": { "$ref": "#/$defs/hex" },
+        "nodeFill": { "$ref": "#/$defs/hex" },
+        "nodeBorder": { "$ref": "#/$defs/hex" },
+        "edge": { "$ref": "#/$defs/hex" },
+        "branchColors": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 8,
+          "items": { "$ref": "#/$defs/hex" }
+        }
+      }
+    },
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "theme": { "$ref": "#/$defs/roleStyle" },
+        "main-branch": { "$ref": "#/$defs/roleStyle" },
+        "branch": { "$ref": "#/$defs/roleStyle" },
+        "leaf": { "$ref": "#/$defs/roleStyle" },
+        "task": { "$ref": "#/$defs/roleStyle" },
+        "idea": { "$ref": "#/$defs/roleStyle" },
+        "question": { "$ref": "#/$defs/roleStyle" },
+        "risk": { "$ref": "#/$defs/roleStyle" }
+      }
+    },
+    "font": {
+      "type": "object",
+      "required": ["family", "baseSize", "titleScale"],
+      "additionalProperties": false,
+      "properties": {
+        "family": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "baseSize": { "type": "integer", "minimum": 10, "maximum": 24 },
+        "titleScale": { "type": "number", "minimum": 1, "maximum": 2.5 }
+      }
+    },
+    "edges": {
+      "type": "object",
+      "required": ["curve", "width", "dashed"],
+      "additionalProperties": false,
+      "properties": {
+        "curve": { "enum": ["smoothstep", "bezier", "straight"] },
+        "width": { "type": "number", "minimum": 1, "maximum": 6 },
+        "dashed": { "type": "boolean" }
+      }
+    }
+  },
+  "$defs": {
+    "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "roleStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fill": { "$ref": "#/$defs/hex" },
+        "text": { "$ref": "#/$defs/hex" },
+        "border": { "$ref": "#/$defs/hex" },
+        "fontWeight": { "enum": ["normal", "bold"] },
+        "shape": { "enum": ["rounded", "pill", "box"] }
+      }
+    }
+  }
+}

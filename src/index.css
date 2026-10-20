@@ -1,0 +1,26 @@
+:root {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--mms-text, #1c1b1f);
+  background: var(--mms-bg, #fff);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Shown instead of the app inside another site's frame (#180). */
+.framed-notice {
+  max-width: 32rem;
+  margin: 3rem auto;
+  padding: 0 1rem;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "template.schema.json",
+  "title": "LLM-generated mind map template",
+  "type": "object",
+  "required": ["kind", "schemaVersion", "name", "preset", "root"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "template" },
+    "schemaVersion": { "const": 1 },
+    "sourceProjectId": {
+      "description": "Library id of the project this AI reply was made from (from the packet's projectId). Lets the app apply the reply to that project.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "preset": { "$ref": "tree-node.schema.json#/$defs/presetRef" },
+    "root": { "$ref": "tree-node.schema.json#/$defs/treeNode" }
+  }
+}

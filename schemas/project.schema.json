@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "project.schema.json",
+  "title": "Mind Map Studio project (brainstorm + map)",
+  "type": "object",
+  "required": ["kind", "schemaVersion", "name", "preset", "brainstorm", "map"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "const": "project" },
+    "schemaVersion": { "const": 1 },
+    "sourceProjectId": {
+      "description": "Library id of the project this AI reply was made from (from the packet's projectId). Lets the app apply the reply to that project.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+    "preset": { "$ref": "#/$defs/presetRef" },
+    "brainstorm": { "$ref": "#/$defs/treeNode" },
+    "map": { "$ref": "#/$defs/treeNode" },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from", "to"],
+        "additionalProperties": false,
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "label": {
+            "description": "Label shown on the cross-link (#148c).",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          }
+        }
+      }
+    },
+    "app": {
+      "description": "Written by newer versions of the app: the oldest file format version that can read this file completely. Older versions report such a file instead of changing it.",
+      "type": "object",
+      "properties": {
+        "minVersion": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "pinned": { "type": "boolean" },
+    "tags": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 40,
+        "pattern": ".*\\S.*"
+      }
+    },
+    "updatedAt": { "type": "string" }
+  },
+  "$defs": {
+    "treeNode": { "$ref": "tree-node.schema.json#/$defs/treeNode" },
+    "presetRef": { "$ref": "tree-node.schema.json#/$defs/presetRef" }
+  }
+}

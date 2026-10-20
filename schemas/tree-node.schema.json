@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tree-node.schema.json",
+  "title": "Shared definitions: tree nodes and preset references",
+  "$defs": {
+    "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "treeNode": {
+      "type": "object",
+      "required": ["id", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "title": { "type": "string", "maxLength": 500 },
+        "notes": { "type": "string", "maxLength": 20000 },
+        "side": { "enum": ["left", "right", "auto"] },
+        "role": {
+          "enum": ["theme", "main-branch", "branch", "leaf", "task", "idea", "question", "risk"]
+        },
+        "collapsed": { "type": "boolean" },
+        "done": {
+          "description": "Task done state (#148a). Shown only when role is \"task\"; kept but not shown on other nodes. Written as true or left out.",
+          "type": "boolean"
+        },
+        "color": {
+          "description": "Colour marker (#148b): a 1-based slot in the active preset's palette.branchColors (wrapping around when the preset has fewer colours), so it follows the theme.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "icon": {
+          "description": "Emoji marker (#148b): exactly one emoji, shown before the title.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16,
+          "pattern": "^[#*0-9]?\\P{ASCII}[^\\s\\p{ASCII}]*$"
+        },
+        "tags": {
+          "description": "Node tags (#150, file format 3): written without the #, in lowercase; letters of any script, digits, -, _ and /. Separate from the project's own tags.",
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "pattern": "^[\\p{L}\\p{M}\\p{N}_/-]+$"
+          }
+        },
+        "image": {
+          "description": "Embedded image (#149, file format 4): the picture's bytes live outside the project, kept by content hash (asset \"sha256-<64 hex>\"); w and h are the stored size in pixels (at most 1600), alt the text for screen readers.",
+          "type": "object",
+          "required": ["asset", "w", "h"],
+          "additionalProperties": false,
+          "properties": {
+            "asset": { "type": "string", "pattern": "^sha256-[0-9a-f]{64}$" },
+            "w": { "type": "integer", "minimum": 1, "maximum": 1600 },
+            "h": { "type": "integer", "minimum": 1, "maximum": 1600 },
+            "alt": { "type": "string", "maxLength": 300 }
+          }
+        },
+        "children": {
+          "type": "array",
+          "maxItems": 1000,
+          "items": { "$ref": "#/$defs/treeNode" }
+        }
+      }
+    },
+    "presetRef": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,63}$" },
+        {
+          "type": "object",
+          "required": ["inline"],
+          "additionalProperties": false,
+          "properties": { "inline": { "$ref": "preset.schema.json" } }
+        }
+      ]
+    }
+  }
+}

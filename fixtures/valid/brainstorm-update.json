@@ -1,0 +1,29 @@
+{
+  "kind": "brainstorm-update",
+  "schemaVersion": 1,
+  "sourceProjectId": "p-launch-1",
+  "name": "Launch ideas",
+  "preset": "default",
+  "brainstorm": {
+    "id": "b-root",
+    "title": "Launch ideas",
+    "children": [
+      {
+        "id": "b-1",
+        "title": "Landing page before beta ends",
+        "children": [
+          { "id": "x-hero-cta", "title": "Hero section with one clear CTA" },
+          { "id": "x-social-proof", "title": "Social proof strip: beta user quotes" }
+        ]
+      },
+      {
+        "id": "b-2",
+        "title": "Press kit for tech blogs",
+        "children": [
+          { "id": "x-boilerplate", "title": "One-paragraph boilerplate + screenshots" }
+        ]
+      },
+      { "id": "x-waitlist", "title": "Waitlist email sequence before launch week" }
+    ]
+  }
+}

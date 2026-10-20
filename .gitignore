@@ -1,0 +1,62 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+dist-viewer
+public/viewer
+
+# Release and package archives (npm run package writes release/)
+release/
+*.zip
+*.tar.gz
+*.tgz
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Playwright (e2e/)
+test-results
+playwright-report
+
+# Skill/LLM output staging
+out
+*.repaired.json
+
+# A sync folder or its leftovers copied into the checkout by mistake
+_assets/
+_trash/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.claude/
+*.local
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Never commit these by accident: local secrets, git bundles and archives
+# passed between machines
+.env
+.env.*
+!.env.example
+*.bundle

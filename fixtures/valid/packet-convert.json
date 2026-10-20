@@ -1,0 +1,32 @@
+{
+  "kind": "analysis-request",
+  "schemaVersion": 1,
+  "projectName": "Launch ideas",
+  "projectId": "p-launch-ideas",
+  "intent": "convert",
+  "depth": "full",
+  "preset": "corporate",
+  "payload": {
+    "brainstorm": {
+      "id": "b-root",
+      "title": "Launch ideas",
+      "children": [
+        { "id": "b-1", "title": "Landing page before beta ends" },
+        { "id": "b-2", "title": "Press kit for tech blogs" },
+        { "id": "b-3", "title": "Launch day livestream", "children": [{ "id": "b-3a", "title": "Demo script" }] }
+      ]
+    }
+  },
+  "instructions": {
+    "goal": "Convert this brainstorm into a structured mind map. Group related ideas under clear branches and keep titles short.",
+    "rules": [
+      "Keep every existing node id exactly as provided.",
+      "Titles must stay under 200 characters.",
+      "Use only these roles: theme, main-branch, branch, leaf, task, idea, question, risk.",
+      "Fill the map tree only; never modify or return the brainstorm tree.",
+      "Assign a role to every node from the closed role set.",
+      "Give first-level branches an explicit side (\"left\" or \"right\") to balance the map."
+    ]
+  },
+  "returnContract": "Return ONE JSON file: a template document (kind \"template\") whose root is the new mind map. Set \"sourceProjectId\" to \"p-launch-ideas\". Do not include the brainstorm tree."
+}

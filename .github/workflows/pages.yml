@@ -1,0 +1,66 @@
+name: Pages
+
+# Publishes the app to GitHub Pages at https://huduzhu.github.io/mindmap/.
+# It runs only when started by hand (Actions -> Pages -> Run workflow), so pushes
+# to main never depend on Pages being set up. The build uses BASE_PATH so every
+# URL, the manifest and the service worker stay inside /mindmap/.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deployment at a time; a newer run waits rather than cancelling a
+# deployment halfway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # No job pushes, so the token is not left in .git/config.
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # The same gates as CI, so "Run workflow" on a failing commit deploys
+      # nothing. Any failure stops the run before the upload.
+      - name: Lint (warnings fail)
+        run: npm run lint
+      - name: Formatting
+        run: npm run format:check
+      - name: Schema fixtures, goldens, presets and examples
+        run: npm run validate:fixtures
+      - name: Tests
+        run: npm test
+      - name: Build (tsc -b + viewer + app)
+        run: npm run build
+        env:
+          BASE_PATH: /mindmap/
+      - name: Bundle budget (#88)
+        run: npm run size
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

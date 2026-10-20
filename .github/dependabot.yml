@@ -1,0 +1,40 @@
+# Keeps the GitHub Actions in the workflows and the npm dependencies
+# current (#59, C1). Minor and patch npm updates arrive as one grouped pull
+# request a week; majors come one by one so each can be reviewed.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    # React is held at 19.2.x: 19.3 adds about 28 KB to the JavaScript loaded at
+    # startup, more than the 575 KB budget leaves. Patches still come through.
+    ignore:
+      - dependency-name: react
+        update-types: ['version-update:semver-minor']
+      - dependency-name: react-dom
+        update-types: ['version-update:semver-minor']
+      - dependency-name: '@types/react'
+        update-types: ['version-update:semver-minor']
+      - dependency-name: '@types/react-dom'
+        update-types: ['version-update:semver-minor']
+      # These majors fail the checks today (#219). Drop an entry once the code
+      # has been moved to the new major by hand.
+      - dependency-name: typescript
+        update-types: ['version-update:semver-major']
+      - dependency-name: vitest
+        update-types: ['version-update:semver-major']
+      - dependency-name: vite-plugin-pwa
+        update-types: ['version-update:semver-major']
+      # Permanent: the Node types follow the Node version pinned in .nvmrc.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']

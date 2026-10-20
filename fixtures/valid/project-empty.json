@@ -1,0 +1,8 @@
+{
+  "kind": "project",
+  "schemaVersion": 1,
+  "name": "Empty scratch",
+  "preset": "default",
+  "brainstorm": { "id": "b-root", "title": "New ideas" },
+  "map": { "id": "m-root", "title": "Untitled map", "role": "theme" }
+}
