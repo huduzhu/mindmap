@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App'
 import { useEditor } from '../store/editor'
+import { notifyPendingEdits, registerPendingEdit } from '../store/pendingEdits'
 import { useProjects } from '../store/projects'
 import { useUi } from '../store/ui'
 import { resetDatabase } from '../test/resetDb'
@@ -286,6 +287,21 @@ describe('Toolbar — save status', () => {
       useProjects.getState().updateCurrent((project) => ({ ...project, name: 'Dirty' }))
     })
     expect(screen.getByTestId('save-status')).toHaveTextContent('Unsaved')
+  })
+
+  it('shows Unsaved while a note is still being typed, though the project is saved (#92)', () => {
+    render(<Toolbar />)
+    expect(screen.getByTestId('save-status')).toHaveTextContent('Saved')
+    let dirty = false
+    let unregister = () => {}
+    act(() => {
+      unregister = registerPendingEdit({ isDirty: () => dirty, flush: () => (dirty = false) })
+      dirty = true
+      notifyPendingEdits()
+    })
+    expect(screen.getByTestId('save-status')).toHaveTextContent('Unsaved')
+    act(() => unregister())
+    expect(screen.getByTestId('save-status')).toHaveTextContent('Saved')
   })
 
   it('shows Save failed when saveStatus is error', () => {
