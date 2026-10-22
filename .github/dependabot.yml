@@ -16,17 +16,7 @@ updates:
         update-types:
           - minor
           - patch
-    # React is held at 19.2.x: 19.3 adds about 28 KB to the JavaScript loaded at
-    # startup, more than the 575 KB budget leaves. Patches still come through.
     ignore:
-      - dependency-name: react
-        update-types: ['version-update:semver-minor']
-      - dependency-name: react-dom
-        update-types: ['version-update:semver-minor']
-      - dependency-name: '@types/react'
-        update-types: ['version-update:semver-minor']
-      - dependency-name: '@types/react-dom'
-        update-types: ['version-update:semver-minor']
       # These majors fail the checks today. Drop an entry once the code
       # has been moved to the new major by hand.
       - dependency-name: typescript
