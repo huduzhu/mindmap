@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-22
+
 ### Fixed
 
 - The save badge no longer says "Saved" while a note is still being typed. A note reaches the
@@ -16,8 +18,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - The start screen appears sooner: the map canvas (with React Flow) is no longer part of the
-  JavaScript the app needs before it can start, which drops from about 572 KB to 345 KB. It is
-  fetched straight away alongside it, so a project still opens in the map without waiting.
+  JavaScript the app needs before it can start, which drops by about 225 KB. It is fetched
+  straight away alongside it, so a project still opens in the map without waiting.
+- Updated React and React DOM to 19.3.1 (and their types to 19.3.0), which had been held at
+  19.2.x while the startup bundle was near its budget. React 19.3 adds about 28 KB, so startup
+  JavaScript is now about 373 KB of the 575 KB budget. Also updated oxlint to 1.89.
+- Dependabot proposes React minor updates again, and the packaging test also runs on Windows.
 
 ## [1.0.1] - 2026-10-22
 
@@ -86,6 +92,7 @@ The first public release.
 - Imported, restored, synced and GitHub files nested deeper than 1,000 levels are refused
   instead of freezing the tab.
 
-[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/huduzhu/mindmap/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/huduzhu/mindmap/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/huduzhu/mindmap/releases/tag/v1.0.0
