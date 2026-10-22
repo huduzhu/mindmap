@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import { MindMapCanvas } from './components/MindMapCanvas'
 import { NodeDetailsDialog } from './components/NodeDetailsDialog'
 import { StartScreen } from './components/StartScreen'
 import { Announcer } from './components/Announcer'
@@ -12,6 +11,7 @@ import {
   CommandPaletteHost,
   PresentationHost,
   LazyBrainstormOutliner,
+  LazyMindMapCanvas,
   LazyOutlineView,
   LinkPickerHost,
   PromptHost,
@@ -127,7 +127,7 @@ function ProjectView({ projectId }: { projectId: string }) {
             </section>
           </div>
         ) : view === 'map' ? (
-          <MindMapCanvas />
+          <LazyMindMapCanvas />
         ) : view === 'brainstorm' ? (
           <LazyBrainstormOutliner />
         ) : (

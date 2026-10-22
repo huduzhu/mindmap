@@ -15,6 +15,7 @@ import { settlePrompt, usePrompt } from './promptStore'
 import { settleChoice, useChoice } from './choiceStore'
 import {
   loadBrainstormOutliner,
+  loadMindMapCanvas,
   loadBranchExport,
   loadChoiceDialog,
   loadFocusBar,
@@ -127,7 +128,11 @@ const TagFilterChipChunk = lazyPart(loadTagFilter, (m) => m.TagFilterChip)
 /** The breadcrumb bar (#146) is only fetched once a view is focused. */
 const FocusBarChunk = lazyPart(loadFocusBar, (m) => m.FocusBar)
 
-/** The Brainstorm and Outline views (#141): only needed outside the map view. */
+/**
+ * The views (#141). Brainstorm and Outline are only needed outside the map
+ * view; the map canvas is the default view, but the start screen does not
+ * need it, and main.tsx fetches it at once rather than when the app is idle.
+ */
 function ViewFailed() {
   const t = useT()
   return <div className="view-loading">{t('update.chunk')}</div>
@@ -140,6 +145,9 @@ const BrainstormOutlinerChunk = lazyView(() =>
   loadBrainstormOutliner().then((m) => ({ default: m.BrainstormOutliner })),
 )
 const OutlineViewChunk = lazyView(() => loadOutlineView().then((m) => ({ default: m.OutlineView })))
+const MindMapCanvasChunk = lazyView(() =>
+  loadMindMapCanvas().then((m) => ({ default: m.MindMapCanvas })),
+)
 
 function ViewLoading() {
   const t = useT()
@@ -216,6 +224,14 @@ export function LazyBrainstormOutliner() {
   return (
     <Suspense fallback={<ViewLoading />}>
       <BrainstormOutlinerChunk />
+    </Suspense>
+  )
+}
+
+export function LazyMindMapCanvas() {
+  return (
+    <Suspense fallback={<ViewLoading />}>
+      <MindMapCanvasChunk />
     </Suspense>
   )
 }

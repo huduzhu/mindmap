@@ -13,6 +13,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   project a moment after you stop typing, so in that moment the badge said "Saved" too early,
   and closing the app then could lose the last words.
 
+### Changed
+
+- The start screen appears sooner: the map canvas (with React Flow) is no longer part of the
+  JavaScript the app needs before it can start, which drops from about 572 KB to 345 KB. It is
+  fetched straight away alongside it, so a project still opens in the map without waiting.
+
 ## [1.0.1] - 2026-10-22
 
 ### Fixed
