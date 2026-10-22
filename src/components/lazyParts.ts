@@ -1,7 +1,7 @@
 /**
  * Loaders for the parts of the app kept out of the first download (#141):
- * the command palette (with its command list), the small root dialogs, and
- * the Brainstorm and Outline views. `lazyDialogs.tsx` renders them; once the
+ * the command palette (with its command list), the small root dialogs, the
+ * map canvas (with React Flow and d3) and the Brainstorm and Outline views. `lazyDialogs.tsx` renders them; once the
  * app is idle `preloadLazyParts` fetches them, so opening one later does not
  * wait on the network.
  */
@@ -10,6 +10,7 @@ export const loadShortcutsDialog = () => import('./ShortcutsDialog')
 export const loadLinkPicker = () => import('./LinkPicker')
 export const loadPromptDialog = () => import('./PromptDialog')
 export const loadChoiceDialog = () => import('./ChoiceDialog')
+export const loadMindMapCanvas = () => import('./MindMapCanvas')
 export const loadBrainstormOutliner = () => import('./BrainstormOutliner')
 export const loadOutlineView = () => import('./OutlineView')
 export const loadFocusBar = () => import('./FocusBar')
