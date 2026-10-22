@@ -1,10 +1,15 @@
 name: CI
 
+# Pushes to main and version tags, and every pull request. Other branches are
+# checked through their pull request, so a Dependabot PR no longer runs twice.
 on:
   push:
+    branches: [main]
+    tags: ['v*']
   pull_request:
+  workflow_dispatch:
 
-# The job only reads the repo; don't hand it a write-all token (#59).
+# The job only reads the repo; don't hand it a write-all token.
 permissions:
   contents: read
 
@@ -42,14 +47,14 @@ jobs:
       - name: Build (tsc -b + viewer + app)
         if: ${{ !cancelled() }}
         run: npm run build
-      - name: Bundle budget (#88)
+      - name: Bundle budget
         if: ${{ !cancelled() }}
         run: npm run size
       - name: Dependency audit
         if: ${{ !cancelled() }}
         run: npm audit --audit-level=high
 
-  # Browser E2E (#63): Playwright against `vite preview` of a fresh build, plus
+  # Browser E2E: Playwright against `vite preview` of a fresh build, plus
   # the dev-server-only checks in e2e/dev.spec.ts.
   e2e:
     needs: gates

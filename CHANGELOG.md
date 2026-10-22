@@ -5,6 +5,18 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Updated minor and patch dependencies (Vite 8.3, React Flow 12.12, Playwright 1.64, oxlint,
+  Prettier, jsdom, Vitest 4.1.12 and others); React stays on 19.2.x.
+- Publishing a GitHub release now deploys it to GitHub Pages.
+- CI runs on pushes to `main` and version tags and on pull requests, no longer twice for a
+  pull request's branch.
+- Documented the release process and the repository settings in `CONTRIBUTING.md`, with
+  importable rulesets in `.github/rulesets/`.
+
 ## [1.0.0] - 2026-10-20
 
 The first public release.
@@ -54,4 +66,5 @@ The first public release.
 - Imported, restored, synced and GitHub files nested deeper than 1,000 levels are refused
   instead of freezing the tab.
 
+[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/huduzhu/mindmap/releases/tag/v1.0.0

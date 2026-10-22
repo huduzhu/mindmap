@@ -1,10 +1,14 @@
 name: Pages
 
 # Publishes the app to GitHub Pages at https://huduzhu.github.io/mindmap/.
-# It runs only when started by hand (Actions -> Pages -> Run workflow), so pushes
-# to main never depend on Pages being set up. The build uses BASE_PATH so every
-# URL, the manifest and the service worker stay inside /mindmap/.
+# It runs when a release is published, building that release's tag, so the hosted
+# app always matches the latest release; Actions -> Pages -> Run workflow deploys
+# by hand. Pushes to main never deploy. Needs Settings -> Pages -> Source set to
+# "GitHub Actions". The build uses BASE_PATH so every URL, the manifest and the
+# service worker stay inside /mindmap/.
 on:
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -44,7 +48,7 @@ jobs:
         run: npm run build
         env:
           BASE_PATH: /mindmap/
-      - name: Bundle budget (#88)
+      - name: Bundle budget
         run: npm run size
       - uses: actions/upload-pages-artifact@v5
         with:

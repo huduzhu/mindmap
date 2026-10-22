@@ -68,6 +68,37 @@ CI runs these on every push and pull request, and all of them must pass:
 - Keep commits focused and describe what changed and why in the message.
 - One topic per pull request; link the issue it addresses.
 - Screenshots or a short recording help for UI changes.
+- `main` only moves forward: every change lands through a pull request with green CI, and its
+  history is never rewritten or force-pushed. Forks, clones and open pull requests all build on
+  it.
+
+## Releasing
+
+1. Move the `[Unreleased]` entries in `CHANGELOG.md` under a new version heading with today's
+   date, and set the same `version` in `package.json` (`npm version <x.y.z> --no-git-tag-version`
+   updates `package-lock.json` too). Fixes are a patch release (1.0.1), new features a minor one
+   (1.1.0).
+2. Merge that through a pull request, then tag the merge commit on `main`: `git tag v1.0.1 &&
+   git push origin v1.0.1`.
+3. Run `npm run package` and publish a GitHub release for the tag with the archives from
+   `release/`. Publishing the release deploys that tag to GitHub Pages.
+
+A published tag is never moved or deleted; a mistake in a release is fixed by the next one.
+
+## Repository settings
+
+These live in the GitHub settings rather than in the code, so they are listed here:
+
+- **Settings → Pages:** Source is **GitHub Actions** (the Pages workflow deploys).
+- **Settings → Environments → github-pages → Deployment branches and tags:** besides `main`,
+  allow tags matching `v*`, since a release deploys from its tag.
+- **Settings → Rules → Rulesets → New ruleset → Import a ruleset:** import both files in
+  `.github/rulesets/`. `main.json` blocks force pushes and deletion of `main` and requires a
+  pull request with the `gates` and `e2e` checks passing; `release-tags.json` stops `v*` tags
+  from being moved or deleted.
+- **Settings → General → Pull Requests:** "Automatically delete head branches" is on.
+- **Settings → Advanced Security:** private vulnerability reporting, Dependabot alerts and
+  security updates, and secret scanning with push protection are on.
 
 ## Reporting security issues
 

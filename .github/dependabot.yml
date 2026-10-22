@@ -1,5 +1,5 @@
 # Keeps the GitHub Actions in the workflows and the npm dependencies
-# current (#59, C1). Minor and patch npm updates arrive as one grouped pull
+# current. Minor and patch npm updates arrive as one grouped pull
 # request a week; majors come one by one so each can be reviewed.
 version: 2
 updates:
@@ -27,7 +27,7 @@ updates:
         update-types: ['version-update:semver-minor']
       - dependency-name: '@types/react-dom'
         update-types: ['version-update:semver-minor']
-      # These majors fail the checks today (#219). Drop an entry once the code
+      # These majors fail the checks today. Drop an entry once the code
       # has been moved to the new major by hand.
       - dependency-name: typescript
         update-types: ['version-update:semver-major']
