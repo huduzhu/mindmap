@@ -7,6 +7,14 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-22
+
+### Fixed
+
+- `npm run package`, which builds the release archives, failed to start: the ZIP writer it
+  loads under plain Node had begun importing the app's translations. A test now runs it the
+  same way.
+
 ### Changed
 
 - Updated minor and patch dependencies (Vite 8.3, React Flow 12.12, Playwright 1.64, oxlint,
@@ -66,5 +74,6 @@ The first public release.
 - Imported, restored, synced and GitHub files nested deeper than 1,000 levels are refused
   instead of freezing the tab.
 
-[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/huduzhu/mindmap/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/huduzhu/mindmap/releases/tag/v1.0.0
