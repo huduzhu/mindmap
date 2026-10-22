@@ -18,10 +18,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - The start screen appears sooner: the map canvas (with React Flow) is no longer part of the
-  JavaScript the app needs before it can start, which drops from about 572 KB to 345 KB. It is
-  fetched straight away alongside it, so a project still opens in the map without waiting.
-- Dependabot proposes React minor updates again; they were held at 19.2.x while the startup
-  bundle was near its budget. The packaging test also runs on Windows now.
+  JavaScript the app needs before it can start, which drops by about 225 KB. It is fetched
+  straight away alongside it, so a project still opens in the map without waiting.
+- Updated React and React DOM to 19.3.1 (and their types to 19.3.0), which had been held at
+  19.2.x while the startup bundle was near its budget. React 19.3 adds about 28 KB, so startup
+  JavaScript is now about 373 KB of the 575 KB budget. Also updated oxlint to 1.89.
+- Dependabot proposes React minor updates again, and the packaging test also runs on Windows.
 
 ## [1.0.1] - 2026-10-22
 
