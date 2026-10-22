@@ -7,6 +7,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Updated Vitest, the unit-test runner, to version 5; Dependabot now offers its major updates
+  too.
+
 ## [1.0.2] - 2026-10-22
 
 ### Fixed
