@@ -7,6 +7,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- The save badge no longer says "Saved" while a note is still being typed. A note reaches the
+  project a moment after you stop typing, so in that moment the badge said "Saved" too early,
+  and closing the app then could lose the last words.
+
 ## [1.0.1] - 2026-10-22
 
 ### Fixed

@@ -17,6 +17,7 @@ import { focusViewOf, useEditor } from '../store/editor'
 import { activeTagFilter } from '../map/tags'
 import { treeHasImage } from '../map/image'
 import { useProjects } from '../store/projects'
+import { useHasPendingEdits } from '../store/pendingEdits'
 import { useUi } from '../store/ui'
 import {
   LazyExportForAiDialog,
@@ -46,7 +47,10 @@ export function Toolbar() {
   const currentId = useProjects((s) => s.currentId)
   const current = useProjects((s) => s.current)
   const snapshots = useProjects((s) => s.snapshots)
-  const saveStatus = useProjects((s) => s.saveStatus)
+  const storedStatus = useProjects((s) => s.saveStatus)
+  // Notes still being typed are not in the project yet: not "Saved" (#92).
+  const draftPending = useHasPendingEdits()
+  const saveStatus = storedStatus === 'saved' && draftPending ? 'pending' : storedStatus
   const saveError = useProjects((s) => s.saveError)
   const historyError = useEditor((s) => s.historyError)
   const storageFull = useProjects((s) => s.storageFull)

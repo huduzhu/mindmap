@@ -4,7 +4,7 @@ import type { TreeNode } from '../schema/types'
 import { clampNotes, findNode, setNotes, setRole, setSide } from '../store/treeOps'
 import { useEditor } from '../store/editor'
 import { useProjects } from '../store/projects'
-import { registerPendingEdit } from '../store/pendingEdits'
+import { notifyPendingEdits, registerPendingEdit } from '../store/pendingEdits'
 import { renderNotesMarkdown } from '../notesMarkdown'
 import { linkBetween, linkedIds, removeLinkBetween } from '../store/links'
 import { editLinkLabel } from './linkActions'
@@ -68,6 +68,7 @@ export function NodeDetailsPanel({ section, node, isRoot, isDepth1, renaming }: 
     if (draft === committedRef.current) return
     committedRef.current = draft
     useEditor.getState().applyTree(section, (tree) => setNotes(tree, node.id, draft))
+    notifyPendingEdits()
   }
 
   // Commit a half-typed draft when the selection moves away (the key remounts
@@ -175,6 +176,7 @@ export function NodeDetailsPanel({ section, node, isRoot, isDepth1, renaming }: 
               const value = clampNotes(e.target.value)
               draftRef.current = value
               setNotesDraft(value)
+              notifyPendingEdits()
             }}
             onBlur={commitNotes}
             placeholder={isMap ? t('details.notesMap') : t('details.notesIdea')}
