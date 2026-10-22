@@ -10,12 +10,13 @@
 // - mindmap-studio-<version>-app.zip: just the built app (dist/), with
 //   LICENSE, THIRD_PARTY_NOTICES.md and README-OFFLINE.txt on how to serve it.
 // Cross-platform: needs only git and Node 24 (see .nvmrc), which imports the
-// shared store-only ZIP writer straight from its TypeScript source.
+// shared store-only ZIP writer (src/io/zipWriter.ts) straight from its
+// TypeScript source, so that file must not import anything.
 import { execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { zipStore } from '../src/io/zip.ts'
+import { zipStore } from '../src/io/zipWriter.ts'
 
 export const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 

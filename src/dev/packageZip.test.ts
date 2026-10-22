@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
@@ -38,5 +39,22 @@ describe('release packaging', () => {
     expect(text).toContain('python -m http.server')
     expect(text).toContain('localhost')
     expect(text).toContain('https://')
+  })
+})
+
+describe('release packaging under plain Node', () => {
+  // Vitest resolves extensionless and directory imports that Node does not, so
+  // a test importing the script can pass while `npm run package` fails to start.
+  it('loads scripts/package-zip.mjs without Vite', () => {
+    const script = path.resolve(import.meta.dirname, '../../scripts/package-zip.mjs')
+    expect(() =>
+      execFileSync(
+        process.execPath,
+        ['--input-type=module', '-e', `await import(${JSON.stringify(script)})`],
+        {
+          stdio: 'pipe',
+        },
+      ),
+    ).not.toThrow()
   })
 })
