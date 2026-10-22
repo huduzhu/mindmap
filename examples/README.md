@@ -19,7 +19,7 @@ checks them in CI).
 A `brainstorm-update` always applies to the project whose library id is in its
 `sourceProjectId`. This file targets the "Product Launch" project in the
 library it was authored against (id `VpDCweylBz`). If that project is not in
-your library, it is imported as a new project instead, with a note saying so
-(#31). To author your own update,
+your library, it is imported as a new project instead, with a note saying so.
+To author your own update,
 use **Export ▾ → For AI…** in the app and pick **expand**: the packet carries your
 `projectId`, and the returned file's `sourceProjectId` must copy it exactly.
