@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { appEntries, offlineReadme } from '../../scripts/package-zip.mjs'
 
@@ -46,7 +47,10 @@ describe('release packaging under plain Node', () => {
   // Vitest resolves extensionless and directory imports that Node does not, so
   // a test importing the script can pass while `npm run package` fails to start.
   it('loads scripts/package-zip.mjs without Vite', () => {
-    const script = path.resolve(import.meta.dirname, '../../scripts/package-zip.mjs')
+    // A file URL, not a path: Node's import() reads C:\... on Windows as a URL scheme.
+    const script = pathToFileURL(
+      path.resolve(import.meta.dirname, '../../scripts/package-zip.mjs'),
+    ).href
     expect(() =>
       execFileSync(
         process.execPath,
