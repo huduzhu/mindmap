@@ -13,6 +13,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   too.
 - Updated vite-plugin-pwa, which builds the service worker, to version 2. The built app,
   service worker included, is unchanged.
+- Updated TypeScript to 7, the native compiler: type-checking the project (`tsc -b`, part of
+  `npm run build`) takes about 2 seconds instead of 15. No code changes were needed.
 
 ## [1.0.2] - 2026-10-22
 

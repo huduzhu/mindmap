@@ -17,10 +17,6 @@ updates:
           - minor
           - patch
     ignore:
-      # These majors fail the checks today. Drop an entry once the code
-      # has been moved to the new major by hand.
-      - dependency-name: typescript
-        update-types: ['version-update:semver-major']
       # Permanent: the Node types follow the Node version pinned in .nvmrc.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
