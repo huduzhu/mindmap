@@ -200,6 +200,41 @@ describe('library backup (#82)', () => {
     )
   })
 
+  /** A backup ZIP holding one good project under a hand-edited manifest. */
+  function craftedBackup(fields: Record<string, unknown>): Uint8Array {
+    const manifest = {
+      kind: BACKUP_KIND,
+      version: 1,
+      createdAt: '2026-09-01T00:00:00.000Z',
+      projects: [{ file: 'projects/good.json', id: 'g', name: 'Good' }],
+      ...fields,
+    }
+    return zipStore([
+      { name: 'manifest.json', data: encoder.encode(JSON.stringify(manifest)) },
+      { name: 'projects/good.json', data: encoder.encode(JSON.stringify(makeProject('Good'))) },
+    ])
+  }
+
+  it('restores the projects when the presets or snapshots field is not a list', async () => {
+    const result = await restoreLibraryBackup(craftedBackup({ presets: 5, snapshots: 5 }))
+    expect(result).toMatchObject({ ok: true, projects: 1, snapshots: 0, presets: 0 })
+    expect((await db.listProjects()).map((record) => record.project.name)).toEqual(['Good'])
+  })
+
+  it('skips empty preset and project entries instead of failing the restore', async () => {
+    const result = await restoreLibraryBackup(
+      craftedBackup({
+        presets: [null],
+        projects: [null, { file: 'projects/good.json', id: 'g', name: 'Good' }],
+        snapshots: [null],
+      }),
+    )
+    expect(result).toMatchObject({ ok: true, projects: 1, presets: 0 })
+    if (!result.ok) return
+    expect(result.notes.join(' ')).toContain('Skipped 2 unreadable items')
+    expect((await db.listProjects()).map((record) => record.project.name)).toEqual(['Good'])
+  })
+
   it('refuses a ZIP that is not a backup, and a backup from a newer app', async () => {
     const other = zipStore([{ name: 'map.html', data: encoder.encode('<html></html>') }])
     expect(await restoreLibraryBackup(other)).toEqual({

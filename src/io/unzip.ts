@@ -51,7 +51,15 @@ async function inflateRaw(data: Uint8Array, size: number, name: string): Promise
   let length = 0
   const reader = stream.getReader()
   for (;;) {
-    const { done, value } = await reader.read()
+    // A corrupt deflate stream makes the browser reject with a bare TypeError
+    // (often with no message); report it as a damaged entry instead.
+    let chunk: ReadableStreamReadResult<Uint8Array>
+    try {
+      chunk = await reader.read()
+    } catch {
+      throw new ZipError(t('zip.checksum', { name }))
+    }
+    const { done, value } = chunk
     if (done) break
     if (length + value.length > size) {
       await reader.cancel().catch(() => undefined)
@@ -120,6 +128,9 @@ export async function unzip(bytes: Uint8Array): Promise<ZipEntry[]> {
     const extraLength = view.getUint16(cursor + 30, true)
     const commentLength = view.getUint16(cursor + 32, true)
     const localOffset = view.getUint32(cursor + 42, true)
+    if (cursor + 46 + nameLength + extraLength + commentLength > bytes.length) {
+      throw new ZipError(t('zip.badDirectory'))
+    }
     const name = decoder.decode(bytes.subarray(cursor + 46, cursor + 46 + nameLength))
     cursor += 46 + nameLength + extraLength + commentLength
 

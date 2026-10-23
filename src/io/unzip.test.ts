@@ -94,6 +94,34 @@ describe('unzip (#82)', () => {
     },
   )
 
+  it.skipIf(typeof DecompressionStream === 'undefined')(
+    'reports a corrupt deflate stream as a damaged entry, not a blank error',
+    async () => {
+      // 0xff starts a block of the reserved type 3, which no inflater accepts.
+      const zip = zipStore([{ name: 'bad.json', data: new Uint8Array([0xff, 0xff, 0xff, 0xff]) }])
+      const view = new DataView(zip.buffer)
+      const central = view.getUint32(zip.length - 22 + 16, true)
+      view.setUint16(8, 8, true)
+      view.setUint16(central + 10, 8, true)
+      const error = await unzip(zip).then(
+        () => null,
+        (caught: unknown) => caught,
+      )
+      expect(error).toBeInstanceOf(ZipError)
+      expect((error as ZipError).message).toMatch(/checksum/)
+      expect((error as ZipError).message).toContain('bad.json')
+    },
+  )
+
+  it('refuses a directory entry whose name runs past the end of the file', async () => {
+    const zip = zipStore([{ name: 'a.json', data: encoder.encode('hello') }])
+    const view = new DataView(zip.buffer)
+    const central = view.getUint32(zip.length - 22 + 16, true)
+    // Claim a longer name than the bytes left; today it is silently cut short.
+    view.setUint16(central + 28, zip.length - central, true)
+    await expect(unzip(zip)).rejects.toThrow(/central directory/)
+  })
+
   it('refuses an entry whose declared size is over the cap, before reading it', async () => {
     const zip = zipStore([{ name: 'big.bin', data: encoder.encode('x') }])
     const view = new DataView(zip.buffer)
