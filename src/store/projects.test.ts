@@ -16,6 +16,7 @@ import {
 import { makeProject } from '../test/fixtures'
 import { listAssetHashes, putAsset } from '../assets/store'
 import { resetDatabase } from '../test/resetDb'
+import { setLocale } from '../i18n'
 
 beforeEach(async () => {
   useProjects.setState({ records: [], trashed: [], currentId: null, current: null, loaded: false })
@@ -309,6 +310,24 @@ describe('projects store', () => {
 
     copy!.project.map.children![0].title = 'mutated'
     expect((await db.getProject(id))?.project.map.children![0].title).toBe('New idea')
+  })
+
+  it('names a duplicate with the current language’s copy suffix and keeps the length cap', async () => {
+    await setLocale('zh-CN')
+    try {
+      const id = await useProjects.getState().createProject('原稿')
+      await useProjects.getState().saveCurrent()
+      const copyId = await useProjects.getState().duplicate(id)
+      expect((await db.getProject(copyId))?.project.name).toBe('原稿（副本）')
+
+      const longId = await useProjects.getState().createProject('长'.repeat(200))
+      await useProjects.getState().saveCurrent()
+      const longCopy = await db.getProject(await useProjects.getState().duplicate(longId))
+      expect(longCopy?.project.name).toHaveLength(200)
+      expect(longCopy?.project.name.endsWith('（副本）')).toBe(true)
+    } finally {
+      await setLocale('en')
+    }
   })
 
   it('saves the current project as a named fork and switches to it', async () => {

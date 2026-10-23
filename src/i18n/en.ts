@@ -125,6 +125,7 @@ export const en = {
   'row.exportJson': 'Export JSON',
   'row.moveToTrash': 'Move to trash',
   'row.duplicated': 'Duplicated as "{name}"',
+  'row.copySuffix': ' (copy)',
   'row.duplicateFailed': 'Duplicate failed: {error}',
   'row.trashTitle': 'Move to trash',
   'row.trashMessage': 'Move "{name}" to the trash? You can restore it from Trash{retention}.',

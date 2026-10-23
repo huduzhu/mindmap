@@ -7,6 +7,8 @@ import { useProjects } from './store/projects'
 import { useUi } from './store/ui'
 import { getProject } from './io/db'
 import { resetDatabase } from './test/resetDb'
+import { setLocale } from './i18n'
+import { useToast } from './components/toastStore'
 
 async function setupProject() {
   const id = await useProjects.getState().createProject('Unload test')
@@ -113,5 +115,32 @@ describe('details panel shortcut (#144)', () => {
     // Ctrl+Shift+I stays the browser's developer tools.
     fireEvent.keyDown(document.body, { key: 'I', ctrlKey: true, shiftKey: true })
     expect(useUi.getState().detailsPanel).toBe('shown')
+  })
+})
+
+describe('open-error toast', () => {
+  beforeEach(async () => {
+    useProjects.setState({ records: [], currentId: null, current: null, loaded: false })
+    useEditor.setState({ past: [], future: [], selection: null, editing: null, view: 'map' })
+    await resetDatabase()
+  })
+
+  afterEach(async () => {
+    useProjects.setState({ openError: null })
+    useToast.setState({ message: null })
+    await setLocale('en')
+  })
+
+  it('uses the translated message for a project that cannot be opened', async () => {
+    await setLocale('zh-CN')
+    await renderApp()
+    act(() => {
+      useProjects.setState({ openError: { id: 'p1', name: '坏项目', message: 'bad' } })
+    })
+    await waitFor(() =>
+      expect(useToast.getState().message).toBe(
+        '无法打开“坏项目”：保存的数据与项目格式不符。没有任何内容被修改或删除。',
+      ),
+    )
   })
 })

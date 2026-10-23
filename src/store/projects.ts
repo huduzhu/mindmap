@@ -768,7 +768,7 @@ export const useProjects = create<ProjectsState>()((set, get) => {
       const copy: Project = {
         ...sourceProject,
         ...(sourceProject.tags ? { tags: normalizeTags(sourceProject.tags) } : {}),
-        name: nameWithSuffix(source.project.name, ' (copy)'),
+        name: nameWithSuffix(source.project.name, t('row.copySuffix')),
         updatedAt: now,
       }
       const record: ProjectRecord = { id: copyId, project: copy, updatedAt: now }
