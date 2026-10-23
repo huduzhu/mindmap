@@ -156,15 +156,23 @@ export function wrapHandle(
       const target = await handle.getDirectoryHandle(subfolder, { create: true })
       const { text } = await folder.readText(name)
       const stem = name.replace(/\.json$/i, '')
+      // Only a name that is certainly free is used: a folder of that name is
+      // skipped, and any other failure stops the move (retried like other
+      // operations), so an existing file in the trash is never overwritten.
+      const taken = (candidate: string) =>
+        retry(async () => {
+          try {
+            await target.getFileHandle(candidate)
+            return true
+          } catch (error) {
+            const errorName = (error as { name?: string } | null)?.name
+            if (errorName === 'NotFoundError') return false
+            if (errorName === 'TypeMismatchError') return true
+            throw error
+          }
+        })
       let candidate = name
-      for (let n = 2; ; n++) {
-        try {
-          await target.getFileHandle(candidate)
-          candidate = `${stem} (${n}).json`
-        } catch {
-          break
-        }
-      }
+      for (let n = 2; await taken(candidate); n++) candidate = `${stem} (${n}).json`
       await wrapHandle(target, delays).writeText(candidate, text)
       await retry(() => handle.removeEntry(name))
     },

@@ -719,3 +719,80 @@ describe('folder sync: review 2026-10-20 (#183, #190)', () => {
     expect(await reconcile(lib.deps(dir))).toMatchObject({ written: 0, conflicts: [] })
   })
 })
+
+describe('folder sync: review 2026-10-23', () => {
+  it('a OneDrive copy identical to the project file is moved aside without a conflict copy', async () => {
+    const dir = new FakeDirectory('MindMaps')
+    const lib = library([record(ID_A, project('Roadmap'))])
+    await reconcile(lib.deps(dir))
+    // Edited on the laptop; OneDrive also left a copy of that same file.
+    const laptop = projectFileText(
+      edit(lib.records.get(ID_A)!, ['laptop'], '2026-10-11T00:00:00.000Z'),
+    )
+    const dup = `Roadmap (${ID_A}).mindmap-LAPTOP.json`
+    dir.put(fileNameFor('Roadmap', ID_A), laptop)
+    dir.put(dup, laptop)
+    const deps = lib.deps(dir)
+    const reads: string[] = []
+    const readText = deps.folder.readText.bind(deps.folder)
+    deps.folder.readText = (name) => {
+      reads.push(name)
+      return readText(name)
+    }
+    const report = await reconcile(deps)
+    expect(lib.copies).toEqual([])
+    expect(report.conflicts).toEqual([])
+    expect(report.taken).toBe(1)
+    expect(lib.records.get(ID_A)!.project.map.children![0].title).toBe('laptop')
+    expect(dir.dirs.get('_trash')!.files.has(dup)).toBe(true)
+    // The project file was read once, for both checks.
+    expect(reads.filter((name) => name === fileNameFor('Roadmap', ID_A))).toHaveLength(1)
+  })
+
+  it('a OneDrive copy that differs from the project file is still kept', async () => {
+    const dir = new FakeDirectory('MindMaps')
+    const lib = library([record(ID_B, project('Plan'))])
+    await reconcile(lib.deps(dir))
+    dir.put(
+      `Plan (${ID_B}).mindmap-LAPTOP.json`,
+      projectFileText(edit(lib.records.get(ID_B)!, ['other'], '2026-10-11T00:00:00.000Z')),
+    )
+    dir.put(
+      fileNameFor('Plan', ID_B),
+      projectFileText(edit(lib.records.get(ID_B)!, ['laptop'], '2026-10-12T00:00:00.000Z')),
+    )
+    await reconcile(lib.deps(dir))
+    expect(lib.copies.map((p) => p.map.children![0].title)).toEqual(['other'])
+  })
+
+  it('keeps this PC’s version once while the folder’s cannot be taken yet', async () => {
+    const ID = 'DDDDDDDDDD'
+    const dir = new FakeDirectory('MindMaps')
+    const lib = library([record(ID, project('Busy'))])
+    await reconcile(lib.deps(dir))
+    lib.records.set(ID, edit(lib.records.get(ID)!, ['desktop'], '2026-10-09T00:00:00.000Z'))
+    dir.put(
+      fileNameFor('Busy', ID),
+      projectFileText(edit(lib.records.get(ID)!, ['laptop'], '2026-10-10T00:00:00.000Z')),
+    )
+    // Edited here between the pass's check and the take (no isBusy answer).
+    lib.busy.add(ID)
+    await reconcile(lib.deps(dir))
+    await reconcile(lib.deps(dir))
+    expect(lib.copies.map((p) => p.map.children![0].title)).toEqual(['desktop'])
+    lib.busy.delete(ID)
+    expect((await reconcile(lib.deps(dir))).taken).toBe(1)
+    expect(lib.copies).toHaveLength(1)
+    expect(lib.records.get(ID)!.project.map.children![0].title).toBe('laptop')
+
+    // A later conflict with another version here is kept again.
+    lib.records.set(ID, edit(lib.records.get(ID)!, ['desktop 2'], '2026-10-11T00:00:00.000Z'))
+    dir.put(
+      fileNameFor('Busy', ID),
+      projectFileText(edit(lib.records.get(ID)!, ['laptop 2'], '2026-10-12T00:00:00.000Z')),
+    )
+    lib.busy.add(ID)
+    await reconcile(lib.deps(dir))
+    expect(lib.copies.map((p) => p.map.children![0].title)).toEqual(['desktop', 'desktop 2'])
+  })
+})

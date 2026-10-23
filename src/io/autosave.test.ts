@@ -175,3 +175,51 @@ describe('createAutosave', () => {
     expect(autosave.hasPending()).toBe(false)
   })
 })
+
+// Real, short timers, so this also runs where fake timers are unavailable.
+describe('createAutosave max wait', () => {
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+  it('still saves while edits keep coming faster than the delay', async () => {
+    const saved: number[] = []
+    let active = 0
+    let overlapped = false
+    const autosave = createAutosave(
+      async (value: number) => {
+        active += 1
+        if (active > 1) overlapped = true
+        await sleep(15)
+        saved.push(value)
+        active -= 1
+      },
+      40,
+      undefined,
+      100,
+    )
+    const stop = Date.now() + 350
+    let value = 0
+    while (Date.now() < stop) {
+      autosave.schedule(++value)
+      await sleep(10)
+    }
+    // The 40 ms pause never came, yet the edits were saved along the way.
+    expect(saved.length).toBeGreaterThanOrEqual(2)
+    expect(saved.at(-1)!).toBeLessThan(value)
+    expect(overlapped).toBe(false)
+    await autosave.flush()
+    expect(saved.at(-1)).toBe(value)
+  })
+
+  it('flush and cancel stop the max-wait timer', async () => {
+    const save = vi.fn(async (_value: string) => {})
+    const autosave = createAutosave(save, 1000, undefined, 30)
+    autosave.schedule('a')
+    await autosave.flush()
+    expect(save).toHaveBeenCalledTimes(1)
+    autosave.schedule('b')
+    autosave.cancel()
+    await sleep(60)
+    expect(save).toHaveBeenCalledTimes(1)
+    expect(autosave.hasPending()).toBe(false)
+  })
+})

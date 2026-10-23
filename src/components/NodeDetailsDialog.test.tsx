@@ -5,6 +5,7 @@ import { useEditor } from '../store/editor'
 import { useProjects } from '../store/projects'
 import { makeTree } from '../test/fixtures'
 import { resetDatabase } from '../test/resetDb'
+import { getProject } from '../io/db'
 import { NodeDetailsDialog, NOTES_COMMIT_DELAY_MS } from './NodeDetailsDialog'
 import { hasPendingEdits } from '../store/pendingEdits'
 import { useUi } from '../store/ui'
@@ -193,6 +194,40 @@ describe('NodeDetailsDialog', () => {
     expect(getProjectMap().children![0].notes).toBe('closing the tab now')
     expect(hasPendingEdits()).toBe(false)
     expect(useProjects.getState().hasUnsavedChanges()).toBe(false)
+  })
+
+  it('saves a draft with its own project when a copy sharing its node ids is opened', async () => {
+    await setupMap()
+    const original = useProjects.getState().currentId!
+    await act(() => useProjects.getState().saveCurrent())
+    const copy = await useProjects.getState().duplicate(original)
+    act(() => useEditor.getState().select('a'))
+    fireEvent.change(screen.getByTestId('node-details-notes'), {
+      target: { value: 'typed in the original' },
+    })
+
+    await act(() => useProjects.getState().loadProject(copy))
+    expect(useProjects.getState().currentId).toBe(copy)
+    expect(getProjectMap().children![0].notes).toBeUndefined()
+    expect((await getProject(original))?.project.map.children![0].notes).toBe(
+      'typed in the original',
+    )
+    expect((await getProject(copy))?.project.map.children![0].notes).toBeUndefined()
+  })
+
+  it('never writes a draft into the next project when the switch came first', async () => {
+    const { unmount } = await setupMap()
+    act(() => useEditor.getState().select('a'))
+    fireEvent.change(screen.getByTestId('node-details-notes'), {
+      target: { value: 'typed in the first project' },
+    })
+    // A switch that skipped the commit, as when the App remounts for the next
+    // project: the panel's cleanup runs only afterwards.
+    const next = { ...structuredClone(useProjects.getState().current!), name: 'Other' }
+    act(() => useProjects.setState({ currentId: 'other-project', current: next }))
+    unmount()
+    expect(useProjects.getState().current?.name).toBe('Other')
+    expect(getProjectMap().children![0].notes).toBeUndefined()
   })
 
   it('clears notes when the textarea is emptied', async () => {

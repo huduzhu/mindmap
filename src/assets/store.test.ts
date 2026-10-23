@@ -1,6 +1,7 @@
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { resetDatabase } from '../test/resetDb'
+import { getDB } from '../io/db'
 import { makeTree } from '../test/fixtures'
 import {
   assetBytesTotal,
@@ -125,6 +126,38 @@ describe('thumbnail URLs (#149, HC5)', () => {
     expect(peekThumbUrl(missing)).toBeUndefined()
     expect(calls).toBe(2)
     stop()
+  })
+
+  it('a load dropped while running leaves no stray object URL (#149)', async () => {
+    const meta = await putAsset(png([1]), { w: 1, h: 1, thumb: png([2]) })
+    const loading = loadThumbUrl(meta.hash)
+    refreshAsset(meta.hash)
+    const url = await loading
+    // The first read was thrown away and revoked; the second is the one kept.
+    expect(made).toBe(2)
+    expect(revoked).toEqual(['blob:test/1'])
+    expect(url).toBe('blob:test/2')
+    expect(peekThumbUrl(meta.hash)).toBe(url)
+  })
+
+  it('a load running when the asset arrives does not keep it as missing', async () => {
+    const meta = await putAsset(png([1]), { w: 1, h: 1, thumb: png([2]) })
+    const db = await getDB()
+    const record = (await db.get('assets', meta.hash))!
+    await deleteAsset(meta.hash)
+    let calls = 0
+    const stop = watchThumb(meta.hash, () => (calls += 1))
+    // The read is queued first and finds nothing; the asset is stored right
+    // after it, and the sync pass that stored it refreshes the hash.
+    const loading = loadThumbUrl(meta.hash)
+    const stored = getDB().then((again) => again.put('assets', record))
+    refreshAsset(meta.hash)
+    await stored
+    const url = await loading
+    stop()
+    expect(url).toBe('blob:test/1')
+    expect(peekThumbUrl(meta.hash)).toBe('blob:test/1')
+    expect(calls).toBeGreaterThanOrEqual(1)
   })
 
   it('revokes URLs of thumbnails nobody shows, never a shown one', async () => {

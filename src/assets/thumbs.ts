@@ -17,6 +17,12 @@ export async function getThumb(hash: string): Promise<Blob | null> {
 const thumbUrls = new Map<string, string | null>()
 const loading = new Map<string, Promise<string | null>>()
 const watchers = new Map<string, Set<() => void>>()
+/**
+ * Bumped whenever what is known about a hash is dropped (refreshAsset,
+ * forgetThumb), so a load that started before cannot cache its stale result.
+ */
+const generations = new Map<string, number>()
+const generationOf = (hash: string) => generations.get(hash) ?? 0
 /** Most thumbnail URLs kept that no mounted node is showing. */
 const SPARE_THUMBS = 200
 
@@ -34,6 +40,7 @@ function evict(): void {
 
 /** Revoke and forget the cached thumbnail of `hash`. */
 export function forgetThumb(hash: string): void {
+  generations.set(hash, generationOf(hash) + 1)
   const url = thumbUrls.get(hash)
   if (url) URL.revokeObjectURL(url)
   thumbUrls.delete(hash)
@@ -47,20 +54,26 @@ export function peekThumbUrl(hash: string): string | null | undefined {
 /** Load (once) the thumbnail of `hash` into an object URL; null when it is missing. */
 export function loadThumbUrl(hash: string): Promise<string | null> {
   if (thumbUrls.has(hash)) return Promise.resolve(thumbUrls.get(hash)!)
-  let pending = loading.get(hash)
-  if (!pending) {
-    pending = getThumb(hash)
-      .then((blob) => (blob ? URL.createObjectURL(blob) : null))
-      .catch(() => null)
-      .then((url) => {
-        loading.delete(hash)
-        thumbUrls.set(hash, url)
-        evict()
-        notify(hash)
-        return url
-      })
-    loading.set(hash, pending)
-  }
+  const existing = loading.get(hash)
+  if (existing) return existing
+  const generation = generationOf(hash)
+  const pending: Promise<string | null> = getThumb(hash)
+    .then((blob) => (blob ? URL.createObjectURL(blob) : null))
+    .catch(() => null)
+    .then((url) => {
+      if (loading.get(hash) === pending) loading.delete(hash)
+      if (generationOf(hash) !== generation) {
+        // Dropped while loading (the asset arrived, say): this result may be
+        // stale, so it is thrown away and the thumbnail read again.
+        if (url) URL.revokeObjectURL(url)
+        return loadThumbUrl(hash)
+      }
+      thumbUrls.set(hash, url)
+      evict()
+      notify(hash)
+      return url
+    })
+  loading.set(hash, pending)
   return pending
 }
 
@@ -90,9 +103,11 @@ export function watchThumb(hash: string, listener: () => void): () => void {
  * arrived) so watchers load it again.
  */
 export function refreshAsset(hash: string): void {
-  if (!thumbUrls.has(hash)) return
+  const known = thumbUrls.has(hash) || loading.has(hash)
+  // Even while a load runs: it may have read the asset before it arrived.
   forgetThumb(hash)
-  notify(hash)
+  loading.delete(hash)
+  if (known) notify(hash)
 }
 
 /** Tests: revoke every cached URL. */

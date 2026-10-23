@@ -151,6 +151,37 @@ describe('reading the clipboard (#101)', () => {
     expect(textToPayload('   \n\n')).toBeNull()
   })
 
+  it('carries tags and pictures through a copy and paste', () => {
+    const image = { asset: `sha256-${'a'.repeat(64)}`, w: 40, h: 30, alt: 'A cat' }
+    const source = node('r', 'Root', [
+      node('a', 'Alpha', [node('a1', 'Alpha one', undefined, { tags: ['p2'], image })], {
+        tags: ['p1', 'work'],
+        image: { ...image, alt: undefined },
+      }),
+    ])
+    const read = parsePayload(JSON.stringify(copyPayload(source, ['a'])))!
+    expect(read.nodes[0].tags).toEqual(['p1', 'work'])
+    expect(read.nodes[0].image).toEqual({ asset: image.asset, w: 40, h: 30 })
+    expect(read.nodes[0].children![0].tags).toEqual(['p2'])
+    expect(read.nodes[0].children![0].image).toEqual(image)
+  })
+
+  it('never cuts an over-long title or note in half of an emoji', () => {
+    const long = `${'T'.repeat(499)}😀 tail`
+    const lone = (text: string) => /[\uD800-\uDBFF](?![\uDC00-\uDFFF])/.test(text)
+    const fromApp = parsePayload(
+      JSON.stringify({
+        kind: CLIPBOARD_KIND,
+        nodes: [{ id: 'x', title: long, notes: `${'n'.repeat(19_999)}😀` }],
+      }),
+    )!
+    expect(fromApp.nodes[0].title).toBe('T'.repeat(499))
+    expect(lone(fromApp.nodes[0].notes!)).toBe(false)
+    const fromText = textToPayload(`- ${long}\n  > ${'n'.repeat(19_999)}😀`)!
+    expect(fromText.nodes[0].title).toBe('T'.repeat(499))
+    expect(lone(fromText.nodes[0].notes!)).toBe(false)
+  })
+
   it('keeps notes from quoted lines', () => {
     expect(textToPayload('- Idea\n  > why it matters')!.nodes[0].notes).toBe('why it matters')
   })

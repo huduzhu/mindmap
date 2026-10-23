@@ -288,6 +288,24 @@ describe('editor store', () => {
   })
 })
 
+describe('replaceTrees', () => {
+  it('applies links that differ only in their labels (a restored snapshot)', async () => {
+    await setupProject()
+    useEditor.getState().applyTree('map', (tree) => addChild(addChild(tree, tree.id), tree.id))
+    const project = useProjects.getState().current!
+    const [a, b] = project.map.children!.map((child) => child.id)
+    useProjects
+      .getState()
+      .updateCurrent((p) => ({ ...p, links: [{ from: a, to: b, label: 'old' }] }))
+
+    const restored = useEditor
+      .getState()
+      .replaceTrees(project.map, project.brainstorm, [{ from: a, to: b, label: 'new' }])
+    expect(restored).toBe(true)
+    expect(useProjects.getState().current!.links).toEqual([{ from: a, to: b, label: 'new' }])
+  })
+})
+
 describe('editor store — ensureVisible', () => {
   // The canvas creates a node from a shortcut, selects it, opens its rename input,
   // and then needs it panned into view. It cannot use `reveal` for that: `reveal`

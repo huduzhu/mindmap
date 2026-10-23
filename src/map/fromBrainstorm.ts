@@ -4,7 +4,7 @@ import { newId } from '../store/treeOps'
 /**
  * Offline "Brainstorm → Map" (#87). Brainstorm bullets become map branches:
  * top-level bullets are main branches, deeper bullets their children. Titles,
- * notes, tasks and markers carry over; ids are fresh so the two trees never share nodes;
+ * notes, tasks, markers, tags and pictures carry over; ids are fresh so the two trees never share nodes;
  * sides are left to the layout, which alternates them.
  */
 export function brainstormToBranches(brainstorm: TreeNode): TreeNode[] {
@@ -16,6 +16,8 @@ export function brainstormToBranches(brainstorm: TreeNode): TreeNode[] {
       ...(node.notes ? { notes: node.notes } : {}),
       ...(node.color ? { color: node.color } : {}),
       ...(node.icon ? { icon: node.icon } : {}),
+      ...(node.tags?.length ? { tags: [...node.tags] } : {}),
+      ...(node.image ? { image: { ...node.image } } : {}),
       // Tasks stay tasks, with their done state (#148a).
       ...(node.role === 'task'
         ? { role: 'task' as const, ...(node.done ? { done: true } : {}) }

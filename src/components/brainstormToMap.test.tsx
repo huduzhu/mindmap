@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { useEditor } from '../store/editor'
 import { useProjects } from '../store/projects'
+import { MAX_CHILDREN } from '../store/treeOps'
 import { makeTree as t } from '../test/fixtures'
 import { resetDatabase } from '../test/resetDb'
 import { copyBrainstormToMap } from './brainstormToMap'
@@ -60,6 +61,21 @@ describe('Copy brainstorm to map (#87)', () => {
   it('cancel changes nothing', async () => {
     expect(await choose(null)).toBe(false)
     expect(mapTitles()).toEqual(['Existing'])
+  })
+
+  it('refuses to add more branches than the root may have children', async () => {
+    useProjects.getState().updateCurrent((p) => ({
+      ...p,
+      map: t(
+        'm',
+        'Plan',
+        Array.from({ length: MAX_CHILDREN - 2 }, (_, i) => t(`m${i}`, `Existing ${i}`)),
+      ),
+    }))
+    expect(await choose('append')).toBe(false)
+    expect(mapTitles()).toHaveLength(MAX_CHILDREN - 2)
+    expect(useToast.getState().message).toMatch(/at most 1,000 children/)
+    expect(useToast.getState().tone).toBe('error')
   })
 
   it('refuses an empty brainstorm with a message', async () => {

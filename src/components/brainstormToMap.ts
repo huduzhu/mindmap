@@ -5,6 +5,7 @@ import {
 } from '../map/fromBrainstorm'
 import { useEditor } from '../store/editor'
 import { useProjects } from '../store/projects'
+import { MAX_CHILDREN } from '../store/treeOps'
 import { askChoice } from './choiceStore'
 import { showToast } from './toastStore'
 import { t, tn } from '../i18n'
@@ -44,6 +45,16 @@ export async function copyBrainstormToMap(): Promise<boolean> {
   })
   if (!choice) return false
   const brainstorm = useProjects.getState().current?.brainstorm ?? project.brainstorm
+  if (choice === 'append') {
+    // Adding would give the map's root more children than a node may have,
+    // which backups, sync and import refuse; say so instead.
+    const current = useProjects.getState().current?.map ?? project.map
+    const added = brainstorm.children?.length ?? 0
+    if ((current.children?.length ?? 0) + added > MAX_CHILDREN) {
+      showToast(t('tree.tooManyChildren'), 'error')
+      return false
+    }
+  }
   const editor = useEditor.getState()
   editor.applyTree('map', (map) =>
     choice === 'replace'

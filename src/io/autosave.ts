@@ -9,12 +9,19 @@ export interface Autosave<T> {
   lastError: () => unknown
 }
 
+/**
+ * Debounced saving: a save runs `delayMs` after the last schedule(). Edits that
+ * keep coming (typing without a pause) still save at least every `maxWaitMs`,
+ * so a crash or a closed tab cannot lose minutes of work.
+ */
 export function createAutosave<T>(
   save: (value: T) => Promise<void>,
   delayMs = 800,
   onStatus?: (status: AutosaveStatus, error?: unknown) => void,
+  maxWaitMs = 5000,
 ): Autosave<T> {
   let timer: ReturnType<typeof setTimeout> | null = null
+  let maxTimer: ReturnType<typeof setTimeout> | null = null
   let pending: T | undefined
   let hasPending = false
   let running: Promise<void> | null = null
@@ -27,8 +34,17 @@ export function createAutosave<T>(
     onStatus?.(status, currentError)
   }
 
+  const clearTimers = () => {
+    if (timer) clearTimeout(timer)
+    if (maxTimer) clearTimeout(maxTimer)
+    timer = null
+    maxTimer = null
+  }
+
   const run = () => {
     if (!hasPending || running) return Promise.resolve()
+    // This write takes the latest value, so neither wait is needed any more.
+    clearTimers()
     const value = pending as T
     pending = undefined
     hasPending = false
@@ -61,19 +77,21 @@ export function createAutosave<T>(
         timer = null
         void run()
       }, delayMs)
+      // The longest a pending value waits. While a write runs, run() leaves
+      // it to that write's follow-up, so two writes never overlap.
+      maxTimer ??= setTimeout(() => {
+        maxTimer = null
+        void run()
+      }, maxWaitMs)
     },
     async flush() {
-      if (timer) {
-        clearTimeout(timer)
-        timer = null
-      }
+      clearTimers()
       if (running) await running
       if (hasPending) await run()
       if (running) await running
     },
     cancel() {
-      if (timer) clearTimeout(timer)
-      timer = null
+      clearTimers()
       pending = undefined
       hasPending = false
       setStatus('idle')

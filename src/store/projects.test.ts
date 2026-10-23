@@ -2,7 +2,9 @@ import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as db from '../io/db'
 import { getProject } from '../io/db'
-import { addChild, makeNode, renameNode } from './treeOps'
+import { addChild, makeNode, renameNode, setNotes } from './treeOps'
+import { useEditor } from './editor'
+import { registerPendingEdit } from './pendingEdits'
 import {
   expiredTrash,
   filterProjectRecords,
@@ -843,5 +845,161 @@ describe('persistent storage (#143)', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(persist).toHaveBeenCalledTimes(1)
     expect(localStorage.getItem('mms.persistAsked')).toBe('1')
+  })
+})
+
+describe('a draft still in the notes box (#92)', () => {
+  let unregister: (() => void) | null = null
+  afterEach(() => {
+    unregister?.()
+    unregister = null
+  })
+
+  /** Like the details panel: a notes draft on the map root, committed through the editor. */
+  function typeDraft(text: string) {
+    let dirty = true
+    unregister = registerPendingEdit({
+      isDirty: () => dirty,
+      flush: () => {
+        dirty = false
+        useEditor.getState().applyTree('map', (tree) => setNotes(tree, tree.id, text))
+      },
+    })
+  }
+
+  it('goes into a snapshot taken meanwhile', async () => {
+    await useProjects.getState().createProject('Snap')
+    typeDraft('typed before the snapshot')
+    const snapshot = await useProjects.getState().createSnapshot('Before')
+    expect(snapshot?.project.map.notes).toBe('typed before the snapshot')
+  })
+
+  it('is kept in the undo history when a snapshot is restored', async () => {
+    await useProjects.getState().createProject('Restore')
+    await useProjects.getState().createSnapshot('Empty')
+    typeDraft('typed before the restore')
+    expect(await useProjects.getState().restoreSnapshot('Empty')).toBe(true)
+    expect(useProjects.getState().current?.map.notes).toBeUndefined()
+    useEditor.getState().undo()
+    expect(useProjects.getState().current?.map.notes).toBe('typed before the restore')
+  })
+
+  it('is saved with the project being left, never with the one being opened', async () => {
+    const first = await useProjects.getState().createProject('First')
+    const second = await useProjects.getState().createProject('Second')
+    await useProjects.getState().loadProject(first)
+    typeDraft('typed in First')
+    await useProjects.getState().loadProject(second)
+    expect(useProjects.getState().currentId).toBe(second)
+    expect((await db.getProject(first))?.project.map.notes).toBe('typed in First')
+    expect((await db.getProject(second))?.project.map.notes).toBeUndefined()
+  })
+
+  it('goes into a duplicate and into the trashed copy of the open project', async () => {
+    const id = await useProjects.getState().createProject('Copied')
+    typeDraft('typed before duplicating')
+    const copyId = await useProjects.getState().duplicate(id)
+    expect((await db.getProject(copyId))?.project.map.notes).toBe('typed before duplicating')
+
+    unregister?.()
+    typeDraft('typed before deleting')
+    await useProjects.getState().remove(id)
+    const trashed = await db.getProject(id)
+    expect(trashed?.deletedAt).toBeDefined()
+    expect(trashed?.project.map.notes).toBe('typed before deleting')
+  })
+})
+
+describe('changes to a trashed project (#83)', () => {
+  it('rename, pin and tags refuse it and leave it in the trash', async () => {
+    const id = await useProjects.getState().createProject('Binned')
+    await useProjects.getState().createProject('Open')
+    await useProjects.getState().remove(id)
+    expect(await useProjects.getState().rename(id, 'Renamed')).toBe(false)
+    expect(await useProjects.getState().setPinned(id, true)).toBe(false)
+    expect(await useProjects.getState().addTag(id, 'plans')).toBe(false)
+    expect(await useProjects.getState().removeTag(id, 'plans')).toBe(false)
+    const stored = await db.getProject(id)
+    expect(stored?.deletedAt).toBeDefined()
+    expect(stored?.project).toMatchObject({ name: 'Binned' })
+    expect(stored?.project.pinned).toBeUndefined()
+    expect(stored?.project.tags).toBeUndefined()
+  })
+
+  it('purging the open project closes it and drops its pending save', async () => {
+    const id = await useProjects.getState().createProject('Gone')
+    useProjects.getState().updateCurrent((project) => ({ ...project, name: 'Edited' }))
+    await useProjects.getState().purge(id)
+    expect(useProjects.getState().currentId).toBeNull()
+    expect(useProjects.getState().current).toBeNull()
+    await useProjects.getState().saveCurrent()
+    expect(await db.listProjects()).toEqual([])
+  })
+})
+
+describe('other tabs (#53)', () => {
+  const until = async (check: () => boolean) => {
+    for (let i = 0; i < 100 && !check(); i++) await new Promise((r) => setTimeout(r, 10))
+  }
+  const settle = () => new Promise((r) => setTimeout(r, 100))
+  let channel: BroadcastChannel
+  beforeEach(() => {
+    channel = new BroadcastChannel('mindmap-studio')
+  })
+  afterEach(() => channel.close())
+
+  /** Another tab stores a newer version of `id` and says so. */
+  async function saveElsewhere(id: string, change: (record: ProjectRecordLike) => void) {
+    const stored = (await db.getProject(id))!
+    const updatedAt = new Date(Date.now() + 60_000).toISOString()
+    const record = structuredClone({ ...stored, updatedAt })
+    record.project.updatedAt = updatedAt
+    change(record)
+    await db.putProject(record)
+    channel.postMessage({ type: 'project-saved', id, updatedAt })
+  }
+  type ProjectRecordLike = NonNullable<Awaited<ReturnType<typeof db.getProject>>>
+
+  it('tells other tabs when a project that is not open is pinned', async () => {
+    const id = await useProjects.getState().createProject('Pin me')
+    await useProjects.getState().createProject('Open')
+    const heard: unknown[] = []
+    channel.onmessage = (event) => heard.push(event.data)
+    expect(await useProjects.getState().setPinned(id, true)).toBe(true)
+    await until(() => heard.some((message) => (message as { id?: string }).id === id))
+    expect(heard).toContainEqual(expect.objectContaining({ type: 'project-saved', id }))
+  })
+
+  it('takes over a newer version when nothing is unsaved here', async () => {
+    const id = await useProjects.getState().createProject('Shared')
+    await saveElsewhere(id, (record) => {
+      record.project.map.title = 'Theirs'
+    })
+    await until(() => useProjects.getState().current?.map.title === 'Theirs')
+    expect(useProjects.getState().current?.map.title).toBe('Theirs')
+  })
+
+  it('keeps a draft still in the notes box instead of taking over', async () => {
+    const id = await useProjects.getState().createProject('Shared')
+    const unregister = registerPendingEdit({ isDirty: () => true, flush: () => undefined })
+    try {
+      await saveElsewhere(id, (record) => {
+        record.project.map.title = 'Theirs'
+      })
+      await settle()
+      expect(useProjects.getState().current?.map.title).toBe('Shared')
+    } finally {
+      unregister()
+    }
+  })
+
+  it('keeps the open version when the newer one cannot be opened', async () => {
+    const id = await useProjects.getState().createProject('Shared')
+    await saveElsewhere(id, (record) => {
+      record.project.preset = 'NOT A VALID NAME'
+      record.project.map.title = 'Broken'
+    })
+    await settle()
+    expect(useProjects.getState().current?.map.title).toBe('Shared')
   })
 })

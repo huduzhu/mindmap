@@ -317,11 +317,14 @@ export const useProjects = create<ProjectsState>()((set, get) => {
   }
 
   // Another tab changed the open project. Adopt its version when this tab has
-  // nothing unsaved; otherwise the next autosave detects the conflict.
+  // nothing unsaved — a draft still in the notes box counts — and only if it
+  // passes the same checks as opening it; otherwise the next autosave detects
+  // the conflict.
   async function adoptExternalChange(id: string) {
-    if (get().currentId !== id || autosave.hasPending() || autosave.status() === 'saving') return
+    const busy = () => get().currentId !== id || get().hasUnsavedChanges()
+    if (busy()) return
     const record = await db.getProject(id)
-    if (!record || get().currentId !== id || autosave.hasPending()) return
+    if (!record || busy()) return
     if (record.updatedAt === baseUpdatedAt) return
     if (record.deletedAt) {
       baseUpdatedAt = null
@@ -334,12 +337,16 @@ export const useProjects = create<ProjectsState>()((set, get) => {
       await resetEditor()
       return
     }
+    const checked = await checkStoredProject(record.project)
+    // A copy that cannot be opened is not taken over the one being edited.
+    if (!checked.ok || busy()) return
     const history = await db.getHistory(id)
-    if (get().currentId !== id || autosave.hasPending()) return
+    if (busy()) return
     const editor = await import('./editor')
+    if (busy()) return
     baseUpdatedAt = record.updatedAt
     set({
-      current: normalizeProjectLinks(record.project),
+      current: checked.project,
       syncNotice: t('sync.updated', { name: record.project.name }),
     })
     editor.useEditor.getState().loadHistory(history)
@@ -376,6 +383,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
    * failed: the project stays open so the edit is not thrown away (#127).
    */
   async function settleBeforeLeaving(): Promise<boolean> {
+    // A draft still in the notes box belongs to the project being left.
+    flushPendingEdits()
     await autosave.flush()
     if (autosave.status() === 'error' && autosave.hasPending()) {
       set({ syncNotice: t('save.stayOpen') })
@@ -610,6 +619,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async createSnapshot(name) {
+      // A draft in the notes box goes into the snapshot.
+      flushPendingEdits()
       const trimmed = name.trim()
       const projectId = get().currentId
       const project = get().current
@@ -648,6 +659,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async restoreSnapshot(name) {
+      // The draft is kept in the undo history, so undoing the restore brings it back.
+      flushPendingEdits()
       const projectId = get().currentId
       if (!projectId || !get().current) return false
       await autosave.flush()
@@ -745,6 +758,7 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async duplicate(id) {
+      flushPendingEdits()
       await autosave.flush()
       const source = await db.getProject(id)
       if (!source) throw new Error(`Project ${id} not found`)
@@ -781,7 +795,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
         return true
       }
       const record = await db.getProject(id)
-      if (!record) return false
+      // putProject would drop deletedAt and bring a trashed project back.
+      if (!record || record.deletedAt) return false
       if (record.project.name === trimmed) return true
       const now = new Date().toISOString()
       const renamed: Project = {
@@ -811,11 +826,12 @@ export const useProjects = create<ProjectsState>()((set, get) => {
         return true
       }
       const record = await db.getProject(id)
-      if (!record) return false
+      if (!record || record.deletedAt) return false
       if (record.project.pinned === pinned) return true
       const now = new Date().toISOString()
       const project: Project = { ...record.project, pinned, updatedAt: now }
       await db.putProject({ id, project, updatedAt: now })
+      announce({ type: 'project-saved', id, updatedAt: now })
       set((state) => ({
         records: sortProjectRecords(
           state.records.map((r) => (r.id === id ? { id, project, updatedAt: now } : r)),
@@ -839,8 +855,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
       if (!normalized) return false
       await autosave.flush()
       const current = id === get().currentId ? get().current : undefined
-      const record = current ? { project: current } : await db.getProject(id)
-      if (!record) return false
+      const record = current ? { project: current, deletedAt: undefined } : await db.getProject(id)
+      if (!record || record.deletedAt) return false
       const tags = normalizeTags(record.project.tags)
       const existing = tags.find(
         (value) => value.toLocaleLowerCase() === normalized.toLocaleLowerCase(),
@@ -872,8 +888,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
       if (!normalized) return false
       await autosave.flush()
       const current = id === get().currentId ? get().current : undefined
-      const record = current ? { project: current } : await db.getProject(id)
-      if (!record) return false
+      const record = current ? { project: current, deletedAt: undefined } : await db.getProject(id)
+      if (!record || record.deletedAt) return false
       const tags = normalizeTags(record.project.tags)
       const nextTags = tags.filter((value) => value.toLocaleLowerCase() !== normalized)
       if (nextTags.length === tags.length) return false
@@ -899,6 +915,7 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async remove(id) {
+      if (id === get().currentId) flushPendingEdits()
       await autosave.flush()
       if (id === get().currentId) await flushEditorHistory()
       const record =
@@ -941,6 +958,13 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async purge(id) {
+      const closed = id === get().currentId
+      if (closed) {
+        // Deleted for good: nothing of it is saved any more, and it closes.
+        autosave.cancel()
+        baseUpdatedAt = null
+        set({ currentId: null, current: null, snapshots: [] })
+      }
       await autosave.flush()
       await flushEditorHistory()
       await db.purgeProject(id)
@@ -949,6 +973,7 @@ export const useProjects = create<ProjectsState>()((set, get) => {
         records: state.records.filter((r) => r.id !== id),
         trashed: state.trashed.filter((r) => r.id !== id),
       }))
+      if (closed) await resetEditor()
     },
 
     updateCurrent(mutator) {

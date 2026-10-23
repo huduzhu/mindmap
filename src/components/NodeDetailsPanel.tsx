@@ -35,6 +35,11 @@ export function NodeDetailsPanel({ section, node, isRoot, isDepth1, renaming }: 
   // the unmount cleanup from both committing the same edit, and stops a stale
   // draft from re-committing text the user just undid (#45).
   const committedRef = useRef(storeNotes)
+  // The project this draft was typed in. A switch that happened before the
+  // draft was committed (the App remounts per project, so the cleanup below
+  // runs after it) must not write the draft into the next project, which may
+  // share node ids with this one (a duplicate, a conflict copy).
+  const [projectId] = useState(() => useProjects.getState().currentId)
 
   // Keep the ref synced to the latest draft without touching it during render (oxlint).
   useEffect(() => {
@@ -66,6 +71,7 @@ export function NodeDetailsPanel({ section, node, isRoot, isDepth1, renaming }: 
   const commitNotes = () => {
     const draft = draftRef.current
     if (draft === committedRef.current) return
+    if (useProjects.getState().currentId !== projectId) return
     committedRef.current = draft
     useEditor.getState().applyTree(section, (tree) => setNotes(tree, node.id, draft))
     notifyPendingEdits()

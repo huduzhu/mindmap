@@ -8,12 +8,14 @@
  * nothing. Pasting plain text from anywhere else reads it as an outline.
  */
 import type { NodeLink, TreeNode } from '../schema/types'
-import { MAX_NOTES_LENGTH, MAX_TITLE_LENGTH, MAX_TREE_DEPTH, treeDepth } from '../io/sanitize'
+import { MAX_TREE_DEPTH, treeDepth } from '../io/sanitize'
 import { flattenTitle as flatten, parseMarkdown } from '../io/markdown'
 import { ROLES, SIDES } from '../schema/constants'
-import { findNode, MAX_CHILDREN, newId, pathTo } from '../store/treeOps'
+import { clampNotes, clampTitle, findNode, MAX_CHILDREN, newId, pathTo } from '../store/treeOps'
 import { cleanLinkLabel } from '../store/links'
+import { cleanImage } from './image'
 import { isColorSlot, isEmojiMarker } from './marks'
+import { normalizeNodeTags } from './tags'
 
 export const CLIPBOARD_MIME = 'application/x-mindmap-studio+json'
 export const CLIPBOARD_KIND = 'mindmap-studio-nodes'
@@ -143,10 +145,10 @@ function readNode(raw: unknown, depth: number): TreeNode | null {
   const node: TreeNode = {
     // Replaced on paste; kept only so links inside the copy can be matched.
     id: typeof value.id === 'string' && value.id ? value.id : newId(),
-    title: value.title.slice(0, MAX_TITLE_LENGTH),
+    title: clampTitle(value.title),
   }
   if (typeof value.notes === 'string' && value.notes) {
-    node.notes = value.notes.slice(0, MAX_NOTES_LENGTH)
+    node.notes = clampNotes(value.notes)
   }
   if ((ROLES as readonly unknown[]).includes(value.role)) node.role = value.role as TreeNode['role']
   if ((SIDES as readonly unknown[]).includes(value.side)) node.side = value.side as TreeNode['side']
@@ -155,6 +157,12 @@ function readNode(raw: unknown, depth: number): TreeNode | null {
   if (value.done === true) node.done = true
   if (isColorSlot(value.color)) node.color = value.color
   if (isEmojiMarker(value.icon)) node.icon = value.icon
+  // Tags (#150) and the picture (#149) travel too; the image bytes stay in the
+  // browser-wide asset store, so the pasted node shows the same picture.
+  const tags = normalizeNodeTags(value.tags)
+  if (tags) node.tags = tags
+  const image = cleanImage(value.image)
+  if (image) node.image = image
   if (Array.isArray(value.children)) {
     if (value.children.length > MAX_CHILDREN) return null
     const children: TreeNode[] = []
@@ -195,8 +203,8 @@ export function textToPayload(text: string): ClipboardPayload | null {
 function clampTree(root: TreeNode): TreeNode {
   const clampOne = (node: TreeNode): TreeNode => ({
     ...node,
-    title: node.title.slice(0, MAX_TITLE_LENGTH),
-    ...(node.notes ? { notes: node.notes.slice(0, MAX_NOTES_LENGTH) } : {}),
+    title: clampTitle(node.title),
+    ...(node.notes ? { notes: clampNotes(node.notes) } : {}),
   })
   const top = clampOne(root)
   const stack: TreeNode[] = [top]

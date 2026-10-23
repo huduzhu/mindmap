@@ -31,6 +31,23 @@ describe('brainstorm → map (#87)', () => {
     expect(branches.some((b) => b.side)).toBe(false)
   })
 
+  it('carries tags and pictures, as copies', () => {
+    const image = { asset: `sha256-${'b'.repeat(64)}`, w: 20, h: 10, alt: 'Plane' }
+    const source = t('b', 'Ideas', [
+      t('b1', 'Offline sync', [t('b1a', 'Conflict copies', [], { tags: ['later'] })], {
+        tags: ['p1', 'sync'],
+        image,
+      }),
+    ])
+    const [branch] = brainstormToBranches(source)
+    expect(branch.tags).toEqual(['p1', 'sync'])
+    expect(branch.image).toEqual(image)
+    expect(branch.children?.[0].tags).toEqual(['later'])
+    expect(branch.tags).not.toBe(source.children![0].tags)
+    expect(branch.image).not.toBe(image)
+    expect(branch.children?.[0].image).toBeUndefined()
+  })
+
   it('uses fresh ids so the two trees never share a node', () => {
     const source = brainstorm()
     const branches = brainstormToBranches(source)
