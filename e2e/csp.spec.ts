@@ -59,7 +59,10 @@ test('the built app runs under its Content-Security-Policy', async ({ page }) =>
   const html = await exportVia(page, /Interactive HTML \(\.html\)/)
   expect(await readFile((await html.path())!, 'utf8')).toContain('window.__MMS_DATA__')
 
-  // A reload reopens the project, which validates it with Ajv.
+  // A reload reopens the project, which validates it with Ajv. Wait for the
+  // autosave to land first: on a slow runner it was still running, and the
+  // reload dropped it, so the project came back without the node.
+  await expect(page.getByTestId('save-status')).toHaveText('Saved')
   await page.reload()
   await expect(mapNode(page, 'Under policy')).toBeVisible()
 
