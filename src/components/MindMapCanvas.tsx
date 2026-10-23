@@ -13,11 +13,21 @@ import {
   type NodeChange,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useT, type MessageKey } from '../i18n'
 import { decorateLayout, type MapNodeData } from '../map/layout'
 import { activeTagFilter, tagFilterView } from '../map/tags'
 import { getCachedLayout, resetCachedLayout } from './canvasLayout'
+import { clampMenuLeft } from './menuPosition'
 import {
   applyDropIntent,
   resolveDropIntent,
@@ -323,7 +333,8 @@ function MindMapCanvasInner() {
     const up = height > 0 && y > height / 2
     setNodeMenu({
       nodeId,
-      x,
+      // Its real width is known only once drawn; see the layout effect below.
+      x: clampMenuLeft(x, 0, window.innerWidth),
       y,
       bottom: up ? height - y : undefined,
       maxHeight: height > 0 ? Math.max(120, (up ? y : height - y) - 8) : undefined,
@@ -465,6 +476,15 @@ function MindMapCanvasInner() {
     )
     return { hasLink }
   }, [nodeMenu, project?.links, selectionSet])
+
+  // Near the right edge, move the menu left so all of it is on screen. Measured
+  // once drawn, since its width depends on the labels (and the language).
+  useLayoutEffect(() => {
+    const menu = nodeMenuRef.current
+    if (!nodeMenu || !menu) return
+    const left = clampMenuLeft(nodeMenu.x, menu.getBoundingClientRect().width, window.innerWidth)
+    menu.style.left = `${left}px`
+  }, [nodeMenu])
 
   // Keep focus contained while open, and restore the canvas focus when the menu closes. The
   // cleanup runs before RenameInput's focus effect, so Rename still focuses its input.
@@ -700,20 +720,24 @@ function MindMapCanvasInner() {
       // Nothing reaches the map behind an open dialog (#166).
       if (dialogOpen()) return
       // Alt+. / Alt+, / Alt+1…3 fold what the map shows (#145).
-      if (handleFoldKey(e, 'map', viewRoot?.id)) return
       const target = e.target as HTMLElement | null
+      // The node menu handles its own keys.
+      if (target?.closest('[role="menu"]')) return
+      if (handleFoldKey(e, 'map', viewRoot?.id)) return
       if (target?.closest('button, input, textarea, select, a, [contenteditable="true"]')) return
 
       // Undo/redo first — must work even while renaming (undo() clears editing internally),
       // otherwise a fresh "New idea" draft gets stuck if the user hits Ctrl+Z before committing.
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      // Not with Alt: Ctrl+Alt is AltGr on many keyboards, which types characters.
+      const undoCombo = (e.ctrlKey || e.metaKey) && !e.altKey
+      if (undoCombo && e.key.toLowerCase() === 'z') {
         e.preventDefault()
         const editor = useEditor.getState()
         if (e.shiftKey) editor.redo()
         else editor.undo()
         return
       }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+      if (undoCombo && e.key.toLowerCase() === 'y') {
         e.preventDefault()
         useEditor.getState().redo()
         return
@@ -1120,8 +1144,11 @@ function MindMapCanvasInner() {
             onNodeDrag={onNodeDrag}
             onNodeDragStop={onNodeDragStop}
             onMoveStart={(event) => {
-              // event is null for programmatic moves (fitView, setCenter).
-              if (event) userMovedRef.current = true
+              // event is null for programmatic moves (fitView, setCenter). A pan or
+              // zoom by the user leaves the node menu behind, so it closes.
+              if (!event) return
+              userMovedRef.current = true
+              setNodeMenu(null)
             }}
             // Panning or zooming while renaming can move the node off screen (#97).
             onMove={() => {

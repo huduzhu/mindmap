@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useRef,
   useState,
   type MouseEvent,
@@ -64,6 +65,12 @@ export function useBoxSelect(options: {
   const [box, setBox] = useState<ScreenBox | null>(null)
   /** Swallows the pane click that follows the drag, which would select the root. */
   const justSelectedRef = useRef(false)
+  /** Removes the window listeners of the box being drawn, if any. */
+  const stopRef = useRef<(() => void) | null>(null)
+  useEffect(() => {
+    const stop = stopRef
+    return () => stop.current?.()
+  }, [])
 
   const onMouseDownCapture = useCallback((event: MouseEvent) => {
     // React Flow pans on mousedown; a box drag must not pan.
@@ -88,9 +95,14 @@ export function useBoxSelect(options: {
         })
       const onMove = (moveEvent: globalThis.PointerEvent) =>
         draw(moveEvent.clientX, moveEvent.clientY)
+      // A cancelled pointer or a window losing focus (Alt+Tab mid-drag) never
+      // sends pointerup: drop the box instead of leaving it stuck to the cursor.
+      const onCancel = () => {
+        stop()
+        setBox(null)
+      }
       const onUp = (upEvent: globalThis.PointerEvent) => {
-        window.removeEventListener('pointermove', onMove)
-        window.removeEventListener('pointerup', onUp)
+        stop()
         setBox(null)
         const end = { x: upEvent.clientX, y: upEvent.clientY }
         if (Math.hypot(end.x - start.x, end.y - start.y) < MIN_DRAG_PX) return
@@ -104,8 +116,19 @@ export function useBoxSelect(options: {
         editor.select(ids[0])
         for (const id of ids.slice(1)) editor.select(id, true)
       }
+      const stop = () => {
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        window.removeEventListener('pointercancel', onCancel)
+        window.removeEventListener('blur', onCancel)
+        if (stopRef.current === stop) stopRef.current = null
+      }
+      stopRef.current?.()
+      stopRef.current = stop
       window.addEventListener('pointermove', onMove)
       window.addEventListener('pointerup', onUp)
+      window.addEventListener('pointercancel', onCancel)
+      window.addEventListener('blur', onCancel)
       draw(start.x, start.y)
     },
     [wrapperRef, nodesRef, toFlow],

@@ -135,10 +135,11 @@ export function BrainstormOutliner() {
 
   useEffect(() => {
     if (view === 'split' && activeSection !== 'brainstorm') return
-    if (selection && !rows.some((r) => r.node.id === selection)) {
+    // A row being created is selected and edited before it is listed (as in the Outline).
+    if (selection && editing !== selection && !rows.some((r) => r.node.id === selection)) {
       useEditor.getState().select(null)
     }
-  }, [activeSection, rows, selection, view])
+  }, [activeSection, editing, rows, selection, view])
 
   useEffect(() => {
     if (!revealId || !revealNonce) return
@@ -246,7 +247,8 @@ export function BrainstormOutliner() {
       if (handleFoldKey(e, 'brainstorm', editor.focus.brainstorm ?? undefined)) return
       const target = e.target as HTMLElement | null
       if (target?.closest('button, input, textarea, select, a, [contenteditable="true"]')) return
-      const undoCombo = e.ctrlKey || e.metaKey
+      // Not with Alt: Ctrl+Alt is AltGr on many keyboards, which types characters.
+      const undoCombo = (e.ctrlKey || e.metaKey) && !e.altKey
 
       if (undoCombo && e.key.toLowerCase() === 'z') {
         e.preventDefault()

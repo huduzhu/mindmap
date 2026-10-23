@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  /* The visible height on mobile, where 100vh includes the hidden URL bar. */
+  height: 100dvh;
   width: 100vw;
 }
 
@@ -487,6 +489,15 @@ button.primary:hover:not(:disabled) {
     border-color: Highlight;
     color: HighlightText;
     outline: 2px solid Highlight;
+  }
+
+  /* The active option of a list and the chosen preset or filter mode. */
+  .command-item-active,
+  .tag-input-option-active,
+  .preset-list li.preset-current,
+  .tag-filter-choice button[aria-pressed='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
   }
 }
 
@@ -1095,6 +1106,9 @@ button.primary:hover:not(:disabled) {
   display: flex;
   flex-direction: column;
   min-width: 240px;
+  /* A long menu on a short screen scrolls instead of running off the bottom. */
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
   padding: 6px;
   gap: 2px;
   background: var(--mms-node-fill, #fff);

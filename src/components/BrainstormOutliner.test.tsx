@@ -498,3 +498,28 @@ describe('BrainstormOutliner folding (#145)', () => {
     expect(useEditor.getState().editing).toBeNull()
   })
 })
+
+describe('BrainstormOutliner — review 2026-10-24', () => {
+  it('Ctrl+Alt+Z (AltGr+Z on many keyboards) does not undo', async () => {
+    await setupOutliner()
+    act(() => useEditor.getState().select('b'))
+    const wrapper = screen.getByTestId('brainstorm-outliner')
+    fireEvent.keyDown(wrapper, { key: 'Enter' })
+    act(() => useEditor.getState().setEditing(null))
+    expect(useProjects.getState().current!.brainstorm.children).toHaveLength(3)
+    fireEvent.keyDown(wrapper, { key: 'z', ctrlKey: true, altKey: true })
+    expect(useProjects.getState().current!.brainstorm.children).toHaveLength(3)
+    fireEvent.keyDown(wrapper, { key: 'z', ctrlKey: true })
+    expect(useProjects.getState().current!.brainstorm.children).toHaveLength(2)
+    fireEvent.keyDown(wrapper, { key: 'y', ctrlKey: true, altKey: true })
+    expect(useProjects.getState().current!.brainstorm.children).toHaveLength(2)
+  })
+
+  it('keeps a row that is selected and being renamed before it is listed', async () => {
+    await setupOutliner()
+    act(() => useEditor.setState({ selection: 'pending', editing: 'pending' }))
+    expect(useEditor.getState().selection).toBe('pending')
+    act(() => useEditor.setState({ editing: null }))
+    expect(useEditor.getState().selection).toBeNull()
+  })
+})
