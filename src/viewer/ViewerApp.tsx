@@ -125,6 +125,14 @@ function ViewerNode({ data }: NodeProps<Node<ViewerNodeData>>) {
         max={MAX_MAP_TAGS}
         className="map-node-tags"
       />
+      {data.hasNotes ? (
+        <>
+          <span className="map-node-notes" aria-hidden="true">
+            ✎
+          </span>
+          <span className="mms-visually-hidden">{viewerText(locale, 'hasNotes')}</span>
+        </>
+      ) : null}
       {data.hasChildren && (
         <button
           type="button"
@@ -163,18 +171,25 @@ export function ViewerApp({ data }: { data: ViewerData }) {
   const [presenting, setPresenting] = useState(false)
   const presentText: PresentText = (key, params) => viewerText(locale, `present.${key}`, params)
 
-  // F5 presents here too, instead of reloading the page.
+  // F5 presents here too, instead of reloading the page. Escape closes the
+  // enlarged picture if one is open, otherwise the notes card.
+  const imageOpen = Boolean(enlarged?.image && images[enlarged.image.asset])
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setEnlarged(null)
+      if (event.key === 'Escape') {
+        if (imageOpen) setEnlarged(null)
+        else setNotesNodeId(null)
+      }
       if (event.key !== 'F5' || event.ctrlKey || event.metaKey || event.altKey) return
       if ((event.target as HTMLElement | null)?.closest?.('input, textarea')) return
       event.preventDefault()
+      // The picture would otherwise sit on top of the presentation.
+      setEnlarged(null)
       setPresenting(true)
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [])
+  }, [imageOpen])
 
   const tree = useMemo(
     () => applyCollapsed(project.map, collapsedOverrides),
@@ -343,7 +358,7 @@ export function ViewerApp({ data }: { data: ViewerData }) {
               onExit={() => setPresenting(false)}
             />
           ) : null}
-          {enlarged?.image && images[enlarged.image.asset] ? (
+          {imageOpen && enlarged?.image ? (
             <div
               className="mms-image-view"
               role="dialog"

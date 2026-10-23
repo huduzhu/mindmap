@@ -5,6 +5,7 @@ import type { TreeNode } from '../schema/types'
 import { focusSection, focusViewOf, useEditor, type FocusView } from '../store/editor'
 import { useProjects } from '../store/projects'
 import { findNode, removeNode } from '../store/treeOps'
+import { viewRootOf } from '../map/shownTree'
 
 /**
  * Focus on one branch (#146): a view shows the subtree under its focused node
@@ -18,10 +19,8 @@ export function activeFocusView(): FocusView {
   return focusViewOf(view, activeSection)
 }
 
-/** What `view` shows: its focused branch, or the whole tree. */
-export function viewRootOf(tree: TreeNode, focusId: string | null): TreeNode {
-  return (focusId && findNode(tree, focusId)?.node) || tree
-}
+// What a view shows; shared with the image export, which frames the same tree.
+export { viewRootOf }
 
 /** The root `view` currently shows, or undefined with no project open. */
 export function currentViewRoot(view: FocusView): TreeNode | undefined {

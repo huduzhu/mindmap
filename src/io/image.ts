@@ -4,7 +4,9 @@ import '../i18n/en/files'
 import { toPng, toSvg } from 'html-to-image'
 import { layoutMap } from '../map/layout'
 import { useEditor } from '../store/editor'
-import type { Preset, Project } from '../schema/types'
+import type { Preset, Project, TreeNode } from '../schema/types'
+import { activeTagFilter } from '../map/tags'
+import { pruneHiddenByTags, viewRootOf } from '../map/shownTree'
 import { loadThumbUrl } from '../assets/thumbs'
 import { collectAssetRefs } from '../assets/store'
 
@@ -28,14 +30,25 @@ function nextFrames(count: number): Promise<void> {
  * the <img> elements have decoded, so the capture has them. html-to-image
  * then inlines each one as a data URI (the SVG embeds them too).
  */
-async function imagesReady(element: HTMLElement, project: Project): Promise<void> {
-  const hashes = collectAssetRefs([project.map])
+async function imagesReady(element: HTMLElement, root: TreeNode): Promise<void> {
+  const hashes = collectAssetRefs([root])
   if (hashes.size === 0) return
   await Promise.all([...hashes].map((hash) => loadThumbUrl(hash)))
   await nextFrames(2)
   await Promise.all(
     [...element.querySelectorAll('img')].map((img) => img.decode?.().catch(() => undefined)),
   )
+}
+
+/**
+ * The tree the map view shows, as MindMapCanvas computes it: the branch the
+ * map is focused on (#146), pruned by a hide-mode tag filter (#150). A branch
+ * export passes the branch as `map` with the focus on it, so it is kept whole.
+ */
+export function exportFrameRoot(map: TreeNode): TreeNode {
+  const { focus, tagFilter, editing } = useEditor.getState()
+  const filter = activeTagFilter(tagFilter.map)
+  return pruneHiddenByTags(viewRootOf(map, focus.map), filter, filter?.hide ? editing : null)
 }
 
 /** Longest side of a capture framed on the map itself (printing, #106). */
@@ -53,7 +66,11 @@ export async function exportCanvasImage(
   if (!element) {
     throw new Error(t('image.switchToMap'))
   }
-  const { nodes } = layoutMap(project.map, preset, null, null)
+  // Frame what the canvas renders: the focused branch, without the nodes a
+  // hide-mode tag filter leaves out. Laying out the whole map instead would
+  // frame a box sized for nodes that are not on screen.
+  const shown = exportFrameRoot(project.map)
+  const { nodes } = layoutMap(shown, preset, null, null)
   if (nodes.length === 0) {
     throw new Error(t('image.empty'))
   }
@@ -66,7 +83,7 @@ export async function exportCanvasImage(
   useEditor.getState().setCapturing(true)
   try {
     await nextFrames(2)
-    await imagesReady(element, project)
+    await imagesReady(element, shown)
     const bounds = getNodesBounds(nodes)
     let width = EXPORT_WIDTH
     let height = EXPORT_HEIGHT
