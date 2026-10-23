@@ -12,6 +12,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - A browser test of the installed app offline: the service worker caches every file of the
   build, and a map made and edited with the network off is still there after an offline reload.
 
+### Fixed
+
+- The Content-Security-Policy browser test no longer fails now and then on CI: it reloaded the
+  page before the autosave had landed, which dropped the node it had just added.
+
 ## [1.0.3] - 2026-10-23
 
 ### Changed
