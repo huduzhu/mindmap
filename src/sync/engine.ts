@@ -119,6 +119,13 @@ function errorName(error: unknown): string {
   return (error as { name?: string } | null)?.name ?? ''
 }
 
+/**
+ * For each project, the hash of this PC's version that was kept as a conflict
+ * copy by a pass that then could not take the folder's version (the project
+ * was being edited meanwhile): the next pass does not keep it a second time.
+ */
+const keptLocal = new Map<string, string>()
+
 /** More than this share of known files gone in one pass pauses deletions. */
 const MASS_DELETE_SHARE = 0.5
 
@@ -314,6 +321,14 @@ export async function reconcile(engineDeps: EngineDeps): Promise<SyncReport> {
       candidates.find((file) => record && file.name === fileNameFor(record.project.name, id)) ??
       candidates[0]
     const duplicates = candidates.filter((file) => file !== canonical)
+    // The canonical file, read at most once per pass (a failed read is retried).
+    let canonicalRead: Promise<ParsedFile | 'unavailable'> | null = null
+    const readCanonical = async (file: FolderFile): Promise<ParsedFile | 'unavailable'> => {
+      canonicalRead ??= read(file)
+      const parsed = await canonicalRead
+      if (parsed === 'unavailable') canonicalRead = null
+      return parsed
+    }
 
     try {
       // OneDrive's own conflict files and copies (§0a-6): keep their content
@@ -332,11 +347,18 @@ export async function reconcile(engineDeps: EngineDeps): Promise<SyncReport> {
         // Content both sides last agreed on is not a separate edit (#190): it
         // is an old file a rename left behind.
         const duplicateHash = parsed.ok ? projectHash(parsed.project) : undefined
-        if (
+        const separateEdit =
           parsed.ok &&
           duplicateHash !== stored?.hash &&
           (!record || duplicateHash !== projectHash(record.project))
-        ) {
+        // The same content as the canonical file is not a separate edit either:
+        // a copy OneDrive made of it. Unreadable canonical: keep the copy.
+        const sameAsCanonical = async () => {
+          if (!canonical) return false
+          const main = await readCanonical(canonical)
+          return main !== 'unavailable' && main.ok && projectHash(main.project) === duplicateHash
+        }
+        if (parsed.ok && separateEdit && !(await sameAsCanonical())) {
           await deps.addCopies([conflictCopy(parsed.project, deps.conflictLabel())])
           report.conflicts.push(parsed.project.name)
         }
@@ -347,7 +369,7 @@ export async function reconcile(engineDeps: EngineDeps): Promise<SyncReport> {
       if (record?.deletedAt) {
         if (canonical && stored?.trashed) {
           // Its file came back after it went to _trash: restored on another PC (#114).
-          const parsed = await read(canonical)
+          const parsed = await readCanonical(canonical)
           if (parsed === 'unavailable') {
             report.skipped.push({ file: canonical.name, reason: 'unavailable' })
           } else if (!parsed.ok) {
@@ -368,7 +390,7 @@ export async function reconcile(engineDeps: EngineDeps): Promise<SyncReport> {
           if (canonical.lastModified !== stored.lastModified) {
             // Changed on another PC since the last agreement (#183): its edit
             // wins over the trashing here, so the project comes back with it.
-            const parsed = await read(canonical)
+            const parsed = await readCanonical(canonical)
             if (parsed === 'unavailable') {
               report.skipped.push({ file: canonical.name, reason: 'unavailable' })
               continue
@@ -407,7 +429,7 @@ export async function reconcile(engineDeps: EngineDeps): Promise<SyncReport> {
           await deps.deleteSync(id)
         } else if (canonical) {
           // A project made on another PC.
-          const parsed = await read(canonical)
+          const parsed = await readCanonical(canonical)
           if (parsed === 'unavailable') {
             report.skipped.push({ file: canonical.name, reason: 'unavailable' })
           } else if (!parsed.ok) {
@@ -448,7 +470,7 @@ export async function reconcile(engineDeps: EngineDeps): Promise<SyncReport> {
         continue
       }
 
-      const parsed = await read(canonical)
+      const parsed = await readCanonical(canonical)
       if (parsed === 'unavailable') {
         report.skipped.push({ file: canonical.name, reason: 'unavailable' })
         continue
@@ -490,13 +512,18 @@ export async function reconcile(engineDeps: EngineDeps): Promise<SyncReport> {
           report.skipped.push({ file: canonical.name, reason: 'open-unsaved' })
           continue
         }
-        // Keep this PC's version first: if anything below fails, it is not lost (#124).
-        await deps.addCopies([conflictCopy(record.project, deps.conflictLabel())])
+        // Keep this PC's version first: if anything below fails, it is not lost
+        // (#124). Once per version: a pass that could not take the file kept it.
+        if (keptLocal.get(id) !== localHash) {
+          await deps.addCopies([conflictCopy(record.project, deps.conflictLabel())])
+        }
         const result = await deps.adopt(id, parsed.project, record.updatedAt)
         if (result === 'busy') {
+          keptLocal.set(id, localHash)
           report.skipped.push({ file: canonical.name, reason: 'open-unsaved' })
           continue
         }
+        keptLocal.delete(id)
         await remember(id, canonical, parsed.project)
         report.taken += 1
       }

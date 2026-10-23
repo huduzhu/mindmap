@@ -76,15 +76,37 @@ if (!globalThis.ResizeObserver) {
   globalThis.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver
 }
 
+const channels = new Map<string, Set<BroadcastChannelStub>>()
+
 class BroadcastChannelStub {
   name: string
   onmessage: ((event: MessageEvent) => void) | null = null
   onmessageerror: ((event: MessageEvent) => void) | null = null
+  private closed = false
   constructor(name: string) {
     this.name = name
+    let peers = channels.get(name)
+    if (!peers) {
+      peers = new Set()
+      channels.set(name, peers)
+    }
+    peers.add(this)
   }
-  postMessage() {}
-  close() {}
+  postMessage(data: unknown) {
+    if (this.closed) return
+    const peers = channels.get(this.name)
+    if (!peers) return
+    const snapshot = [...peers].filter((peer) => peer !== this)
+    queueMicrotask(() => {
+      for (const peer of snapshot) {
+        if (!peer.closed) peer.onmessage?.({ data } as MessageEvent)
+      }
+    })
+  }
+  close() {
+    this.closed = true
+    channels.get(this.name)?.delete(this)
+  }
   unref() {}
   ref() {}
   addEventListener() {}

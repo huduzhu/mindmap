@@ -99,7 +99,12 @@ function sameLinks(a: NodeLink[] | undefined, b: NodeLink[] | undefined): boolea
   if (!a?.length || !b?.length) return !a?.length && !b?.length
   return (
     a.length === b.length &&
-    a.every((link, index) => link.from === b[index].from && link.to === b[index].to)
+    a.every(
+      (link, index) =>
+        link.from === b[index].from &&
+        link.to === b[index].to &&
+        (link.label ?? '') === (b[index].label ?? ''),
+    )
   )
 }
 

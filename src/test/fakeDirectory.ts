@@ -28,6 +28,8 @@ export class FakeDirectory implements DirectoryHandleLike {
   statFails = new Set<string>()
   /** Names still listed but gone when opened, like a file OneDrive just moved (#113). */
   lost = new Set<string>()
+  /** Error names the next lookups of a file throw, one per lookup (e.g. 'NotReadableError'). */
+  lookupFails = new Map<string, string[]>()
   /** How many times each file was written (#149: asset files are written once). */
   writes = new Map<string, number>()
   readonly name: string
@@ -106,6 +108,10 @@ export class FakeDirectory implements DirectoryHandleLike {
   async getFileHandle(name: string, options?: { create?: boolean }): Promise<FileHandleLike> {
     this.check()
     if (this.lost.has(name)) throw Object.assign(new Error(name), { name: 'NotFoundError' })
+    const fails = this.lookupFails.get(name)?.shift()
+    if (fails) throw Object.assign(new Error(name), { name: fails })
+    // A folder of that name, as a real directory handle reports it.
+    if (this.dirs.has(name)) throw Object.assign(new Error(name), { name: 'TypeMismatchError' })
     if (!this.files.has(name)) {
       if (!options?.create) throw Object.assign(new Error(name), { name: 'NotFoundError' })
       this.files.set(name, { text: '', lastModified: tick() })
