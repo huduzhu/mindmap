@@ -37,7 +37,32 @@ export function PresetsDialog({ onClose }: { onClose: () => void }) {
   const inUse = useResolvedPreset(currentPreset ?? 'default')
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
-  useDialogA11y(dialogRef, { isOpen: true, onClose, labelledBy: titleId })
+  // Esc in the editor goes back to the list; in the list it closes the dialog.
+  useDialogA11y(dialogRef, {
+    isOpen: true,
+    onClose: editing ? () => setEditing(null) : onClose,
+    labelledBy: titleId,
+  })
+
+  // Switching between the list and the editor replaces the focused control:
+  // focus the editor's name, and on the way back the button that opened it.
+  const returnTo = useRef<string | null>(null)
+  const wasEditing = useRef(false)
+  const startEditing = (preset: Preset, trigger: string) => {
+    returnTo.current = trigger
+    setEditing(preset)
+  }
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog || (editing !== null) === wasEditing.current) return
+    wasEditing.current = editing !== null
+    const trigger = returnTo.current
+    const target = editing
+      ? dialog.querySelector<HTMLElement>('[data-testid="preset-editor-name"]')
+      : ((trigger ? dialog.querySelector<HTMLElement>(`[data-testid="${trigger}"]`) : null) ??
+        dialog.querySelector<HTMLElement>('.preset-list button:not(:disabled)'))
+    target?.focus()
+  }, [editing])
 
   useEffect(() => {
     let cancelled = false
@@ -205,7 +230,7 @@ export function PresetsDialog({ onClose }: { onClose: () => void }) {
                       </button>
                       <button
                         type="button"
-                        onClick={() => setEditing(preset)}
+                        onClick={() => startEditing(preset, `preset-edit-${preset.name}`)}
                         aria-label={t(isBuiltIn ? 'editor.customizeLabel' : 'editor.editLabel', {
                           name: presetLabel(preset.name),
                         })}
@@ -234,7 +259,11 @@ export function PresetsDialog({ onClose }: { onClose: () => void }) {
                 })}
               </ul>
               <div className="dialog-actions">
-                <button type="button" onClick={() => setEditing(inUse)} data-testid="preset-new">
+                <button
+                  type="button"
+                  onClick={() => startEditing(inUse, 'preset-new')}
+                  data-testid="preset-new"
+                >
                   {t('editor.new')}
                 </button>
                 <button type="button" disabled={busy} onClick={() => void importPreset()}>

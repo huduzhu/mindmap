@@ -68,6 +68,18 @@ describe('PresetEditor (#104)', () => {
     expect(screen.getByTestId('preset-editor-save')).toBeDisabled()
   })
 
+  it('keeps what is typed in the name field and trims it only when saving', async () => {
+    let done = false
+    render(<PresetEditor initial={base} taken={new Set()} onDone={() => (done = true)} />)
+    const name = screen.getByTestId('preset-editor-name') as HTMLInputElement
+    fireEvent.change(name, { target: { value: ' my-theme ' } })
+    expect(name.value).toBe(' my-theme ')
+    expect(screen.queryByRole('alert')).toBeNull()
+    fireEvent.click(screen.getByTestId('preset-editor-save'))
+    await waitFor(() => expect(done).toBe(true))
+    expect((await getPreset('my-theme'))?.name).toBe('my-theme')
+  })
+
   it('offers to replace another custom preset with the same name', () => {
     render(
       <PresetEditor

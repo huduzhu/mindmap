@@ -56,8 +56,10 @@ export function PresetEditor({
   }))
   const [busy, setBusy] = useState(false)
   const nameId = useId()
-  const problem = presetNameProblem(draft.name)
-  const overwriting = taken.has(draft.name) && draft.name !== (isBuiltIn ? '' : initial.name)
+  // Typed as is; the surrounding spaces are dropped when checked and saved.
+  const name = draft.name.trim()
+  const problem = presetNameProblem(name)
+  const overwriting = taken.has(name) && name !== (isBuiltIn ? '' : initial.name)
 
   // Text that is hard to read on its background or node fill (#138). A warning, not a block.
   const contrastProblems = paletteContrastProblems(draft.palette)
@@ -70,18 +72,19 @@ export function PresetEditor({
 
   const save = async (use: boolean) => {
     if (problem) return
-    const validation = validateDoc(draft)
+    const preset = { ...draft, name }
+    const validation = validateDoc(preset)
     if (!validation.ok) {
       showToast(t('editor.invalid', { detail: formatValidationErrors(validation.errors) }), 'error')
       return
     }
     setBusy(true)
     try {
-      await putPreset(draft)
-      const stored = await getPreset(draft.name)
-      presetChanged(stored ?? draft)
-      if (use) useProjects.getState().updateCurrent((p) => ({ ...p, preset: draft.name }))
-      showToast(t(use ? 'editor.savedUsed' : 'editor.saved', { name: draft.name }))
+      await putPreset(preset)
+      const stored = await getPreset(name)
+      presetChanged(stored ?? preset)
+      if (use) useProjects.getState().updateCurrent((p) => ({ ...p, preset: name }))
+      showToast(t(use ? 'editor.savedUsed' : 'editor.saved', { name }))
       onDone()
     } catch (error) {
       showToast(
@@ -125,7 +128,7 @@ export function PresetEditor({
             id={nameId}
             value={draft.name}
             maxLength={64}
-            onChange={(event) => setDraft((d) => ({ ...d, name: event.target.value.trim() }))}
+            onChange={(event) => setDraft((d) => ({ ...d, name: event.target.value }))}
             aria-invalid={problem !== null}
             data-testid="preset-editor-name"
           />
@@ -135,7 +138,7 @@ export function PresetEditor({
             {t(problem)}
           </p>
         ) : overwriting ? (
-          <p className="muted">{t('editor.overwrite', { name: draft.name })}</p>
+          <p className="muted">{t('editor.overwrite', { name })}</p>
         ) : null}
 
         <fieldset>

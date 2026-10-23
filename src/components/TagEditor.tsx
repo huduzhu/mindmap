@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type KeyboardEvent,
 } from 'react'
+import { useActiveOptionInView } from '../hooks/useActiveOptionInView'
 import { useDialogA11y } from '../hooks/useDialogA11y'
 import { useResolvedPreset } from '../hooks/usePreset'
 import { tn, useT } from '../i18n'
@@ -20,6 +21,7 @@ import { useProjects } from '../store/projects'
 import { findNode } from '../store/treeOps'
 import { addTagsTo, setTags } from '../store/tagOps'
 import { useUi } from '../store/ui'
+import { isComposing } from './ime'
 
 const MAX_SUGGESTIONS = 8
 
@@ -72,6 +74,7 @@ export function TagInput({
     .slice(0, MAX_SUGGESTIONS)
   const expanded = open && options.length > 0
   const activeOption = expanded && active >= 0 && active < options.length ? active : -1
+  useActiveOptionInView(activeOption >= 0 ? `${listId}-${activeOption}` : null)
 
   const add = (raw: string) => {
     if (!raw.trim()) return
@@ -91,7 +94,7 @@ export function TagInput({
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.nativeEvent.isComposing) return
+    if (isComposing(event)) return
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       setOpen(true)

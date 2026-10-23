@@ -149,3 +149,34 @@ describe('PresetsDialog', () => {
     expect(screen.getByTestId('preset-apply-custom-preset')).not.toBeDisabled()
   })
 })
+
+describe('PresetsDialog keyboard', () => {
+  it('Esc in the editor goes back to the list, focusing the button that opened it', async () => {
+    let closed = false
+    await seedBuiltInsAndCustom()
+    render(<PresetsDialog onClose={() => (closed = true)} />)
+    const edit = await screen.findByTestId('preset-edit-custom-preset')
+    edit.focus()
+    fireEvent.click(edit)
+    const name = await screen.findByTestId('preset-editor-name')
+    await waitFor(() => expect(name).toHaveFocus())
+
+    fireEvent.keyDown(name, { key: 'Escape' })
+    expect(closed).toBe(false)
+    expect(screen.queryByTestId('preset-editor')).toBeNull()
+    await waitFor(() => expect(screen.getByTestId('preset-edit-custom-preset')).toHaveFocus())
+
+    fireEvent.keyDown(screen.getByTestId('preset-edit-custom-preset'), { key: 'Escape' })
+    expect(closed).toBe(true)
+  })
+
+  it('"New" opens the editor on its name and returns to the New button', async () => {
+    await seedBuiltInsAndCustom()
+    render(<PresetsDialog onClose={() => undefined} />)
+    await screen.findByTestId('preset-edit-custom-preset')
+    fireEvent.click(screen.getByTestId('preset-new'))
+    await waitFor(() => expect(screen.getByTestId('preset-editor-name')).toHaveFocus())
+    fireEvent.keyDown(screen.getByTestId('preset-editor-name'), { key: 'Escape' })
+    await waitFor(() => expect(screen.getByTestId('preset-new')).toHaveFocus())
+  })
+})
