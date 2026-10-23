@@ -11,6 +11,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Updated Vitest, the unit-test runner, to version 5; Dependabot now offers its major updates
   too.
+- Updated vite-plugin-pwa, which builds the service worker, to version 2. The built app,
+  service worker included, is unchanged.
 
 ## [1.0.2] - 2026-10-22
 
