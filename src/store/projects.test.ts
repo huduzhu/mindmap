@@ -2,7 +2,9 @@ import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as db from '../io/db'
 import { getProject } from '../io/db'
-import { addChild, makeNode, renameNode } from './treeOps'
+import { addChild, makeNode, renameNode, setNotes } from './treeOps'
+import { useEditor } from './editor'
+import { registerPendingEdit } from './pendingEdits'
 import {
   expiredTrash,
   filterProjectRecords,
@@ -843,5 +845,67 @@ describe('persistent storage (#143)', () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(persist).toHaveBeenCalledTimes(1)
     expect(localStorage.getItem('mms.persistAsked')).toBe('1')
+  })
+})
+
+describe('a draft still in the notes box (#92)', () => {
+  let unregister: (() => void) | null = null
+  afterEach(() => {
+    unregister?.()
+    unregister = null
+  })
+
+  /** Like the details panel: a notes draft on the map root, committed through the editor. */
+  function typeDraft(text: string) {
+    let dirty = true
+    unregister = registerPendingEdit({
+      isDirty: () => dirty,
+      flush: () => {
+        dirty = false
+        useEditor.getState().applyTree('map', (tree) => setNotes(tree, tree.id, text))
+      },
+    })
+  }
+
+  it('goes into a snapshot taken meanwhile', async () => {
+    await useProjects.getState().createProject('Snap')
+    typeDraft('typed before the snapshot')
+    const snapshot = await useProjects.getState().createSnapshot('Before')
+    expect(snapshot?.project.map.notes).toBe('typed before the snapshot')
+  })
+
+  it('is kept in the undo history when a snapshot is restored', async () => {
+    await useProjects.getState().createProject('Restore')
+    await useProjects.getState().createSnapshot('Empty')
+    typeDraft('typed before the restore')
+    expect(await useProjects.getState().restoreSnapshot('Empty')).toBe(true)
+    expect(useProjects.getState().current?.map.notes).toBeUndefined()
+    useEditor.getState().undo()
+    expect(useProjects.getState().current?.map.notes).toBe('typed before the restore')
+  })
+
+  it('is saved with the project being left, never with the one being opened', async () => {
+    const first = await useProjects.getState().createProject('First')
+    const second = await useProjects.getState().createProject('Second')
+    await useProjects.getState().loadProject(first)
+    typeDraft('typed in First')
+    await useProjects.getState().loadProject(second)
+    expect(useProjects.getState().currentId).toBe(second)
+    expect((await db.getProject(first))?.project.map.notes).toBe('typed in First')
+    expect((await db.getProject(second))?.project.map.notes).toBeUndefined()
+  })
+
+  it('goes into a duplicate and into the trashed copy of the open project', async () => {
+    const id = await useProjects.getState().createProject('Copied')
+    typeDraft('typed before duplicating')
+    const copyId = await useProjects.getState().duplicate(id)
+    expect((await db.getProject(copyId))?.project.map.notes).toBe('typed before duplicating')
+
+    unregister?.()
+    typeDraft('typed before deleting')
+    await useProjects.getState().remove(id)
+    const trashed = await db.getProject(id)
+    expect(trashed?.deletedAt).toBeDefined()
+    expect(trashed?.project.map.notes).toBe('typed before deleting')
   })
 })

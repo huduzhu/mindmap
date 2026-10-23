@@ -20,6 +20,7 @@ import {
   withoutAppInfo,
 } from '../schema/formatVersion'
 import { formatValidationErrors, validateDoc } from '../schema/validate'
+import { flushPendingEdits } from '../store/pendingEdits'
 import { useProjects } from '../store/projects'
 import * as db from './db'
 import { downloadBlob, slugify } from './files'
@@ -211,6 +212,8 @@ export function backupFilename(now: Date = new Date()): string {
 
 /** Build a backup of the whole library, including unsaved edits, and download it. */
 export async function downloadLibraryBackup(): Promise<BackupManifest> {
+  // A draft still in the notes box is part of the unsaved edits.
+  flushPendingEdits()
   const { currentId, current } = useProjects.getState()
   const now = new Date()
   const backup = await buildLibraryBackup({

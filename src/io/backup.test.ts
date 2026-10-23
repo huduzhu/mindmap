@@ -1,8 +1,9 @@
 // @vitest-environment node
 
 import 'fake-indexeddb/auto'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Preset } from '../schema/types'
+import { registerPendingEdit } from '../store/pendingEdits'
 import { useProjects } from '../store/projects'
 import { makeProject } from '../test/fixtures'
 import { resetDatabase } from '../test/resetDb'
@@ -11,11 +12,13 @@ import {
   backupFilename,
   buildLibraryBackup,
   describeRestore,
+  downloadLibraryBackup,
   openZipFile,
   restoreLibraryBackup,
   type BackupManifest,
 } from './backup'
 import * as db from './db'
+import * as files from './files'
 import { seedBuiltInPresets } from './seed'
 import { unzip } from './unzip'
 import { zipStore } from './zip'
@@ -93,6 +96,29 @@ describe('library backup (#82)', () => {
     ])
     const entry = (await unzip(bytes)).find((item) => item.name === manifest.projects[0].file)!
     expect(JSON.parse(decoder.decode(entry.data)).name).toBe('Alpha (unsaved)')
+  })
+
+  it('includes a draft still in the notes box when downloaded (#92)', async () => {
+    await useProjects.getState().createProject('Alpha')
+    const unregister = registerPendingEdit({
+      isDirty: () => true,
+      flush: () =>
+        useProjects.getState().updateCurrent((project) => ({
+          ...project,
+          map: { ...project.map, notes: 'still typing' },
+        })),
+    })
+    const download = vi.spyOn(files, 'downloadBlob').mockImplementation(() => undefined)
+    try {
+      const manifest = await downloadLibraryBackup()
+      const blob = download.mock.calls[0][1]
+      const entries = await unzip(new Uint8Array(await blob.arrayBuffer()))
+      const entry = entries.find((item) => item.name === manifest.projects[0].file)!
+      expect(JSON.parse(decoder.decode(entry.data)).map.notes).toBe('still typing')
+    } finally {
+      unregister()
+      vi.restoreAllMocks()
+    }
   })
 
   it('names the file by date', () => {

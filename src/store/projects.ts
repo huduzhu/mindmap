@@ -376,6 +376,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
    * failed: the project stays open so the edit is not thrown away (#127).
    */
   async function settleBeforeLeaving(): Promise<boolean> {
+    // A draft still in the notes box belongs to the project being left.
+    flushPendingEdits()
     await autosave.flush()
     if (autosave.status() === 'error' && autosave.hasPending()) {
       set({ syncNotice: t('save.stayOpen') })
@@ -610,6 +612,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async createSnapshot(name) {
+      // A draft in the notes box goes into the snapshot.
+      flushPendingEdits()
       const trimmed = name.trim()
       const projectId = get().currentId
       const project = get().current
@@ -648,6 +652,8 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async restoreSnapshot(name) {
+      // The draft is kept in the undo history, so undoing the restore brings it back.
+      flushPendingEdits()
       const projectId = get().currentId
       if (!projectId || !get().current) return false
       await autosave.flush()
@@ -745,6 +751,7 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async duplicate(id) {
+      flushPendingEdits()
       await autosave.flush()
       const source = await db.getProject(id)
       if (!source) throw new Error(`Project ${id} not found`)
@@ -899,6 +906,7 @@ export const useProjects = create<ProjectsState>()((set, get) => {
     },
 
     async remove(id) {
+      if (id === get().currentId) flushPendingEdits()
       await autosave.flush()
       if (id === get().currentId) await flushEditorHistory()
       const record =
