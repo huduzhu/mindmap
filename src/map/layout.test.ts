@@ -86,6 +86,56 @@ describe('layoutMap', () => {
     expect(leftGap).toBeCloseTo(72, 0)
   })
 
+  it('stacks a tall sibling below a short one without overlap (live test, items 2–11)', () => {
+    const asset = `sha256-${'a'.repeat(64)}`
+    const longTitle = Array.from({ length: 40 }, (_, i) => `word${i}`).join(' ')
+    for (const tall of [
+      { id: 'tall', title: 'Beta', image: { asset, w: 200, h: 100 }, children: [] },
+      { id: 'tall', title: longTitle, children: [] },
+    ] satisfies TreeNode[]) {
+      for (const order of [
+        ['short', 'tall'],
+        ['tall', 'short'],
+      ] as const) {
+        const short: TreeNode = { id: 'short', title: 'Alpha', children: [] }
+        const byId0 = { short, tall }
+        const map: TreeNode = {
+          id: 'root',
+          title: 'Central',
+          children: order.map((id) => ({ ...byId0[id], side: 'right' as const })),
+        }
+        const { nodes } = layoutMap(map, preset, null, null)
+        const byId = new Map(nodes.map((n) => [n.id, n]))
+        const upper = byId.get(order[0])!
+        const lower = byId.get(order[1])!
+        expect(byId.get('tall')!.height!).toBeGreaterThan(byId.get('short')!.height! + 32)
+        const gap = lower.position.y - (upper.position.y + upper.height!)
+        expect(gap).toBeCloseTo(16, 5) // 2 × V_GAP, never negative
+      }
+    }
+  })
+
+  it('centres a parent on its only child whatever their heights', () => {
+    const asset = `sha256-${'b'.repeat(64)}`
+    const map: TreeNode = {
+      id: 'root',
+      title: 'Central',
+      children: [
+        {
+          id: 'p',
+          title: 'Parent',
+          side: 'right',
+          children: [{ id: 'c', title: 'Child', image: { asset, w: 200, h: 100 }, children: [] }],
+        },
+      ],
+    }
+    const { nodes } = layoutMap(map, preset, null, null)
+    const byId = new Map(nodes.map((n) => [n.id, n]))
+    const centre = (id: string) => byId.get(id)!.position.y + byId.get(id)!.height! / 2
+    expect(centre('p')).toBeCloseTo(centre('c'), 5)
+    expect(centre('root')).toBeCloseTo(centre('p'), 5)
+  })
+
   it('edges connect each visible node to its parent', () => {
     const { edges } = layoutMap(tree(), preset, null, null)
     const pairs = edges.map((e) => `${e.source}->${e.target}`).sort()
