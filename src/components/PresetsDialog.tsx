@@ -15,7 +15,7 @@ import { PresetEditor } from './PresetEditor'
 import { presetLabel } from './presetNames'
 import { useResolvedPreset } from '../hooks/usePreset'
 
-function Swatch({ color, label }: { color: string; label: string }) {
+function Swatch({ color, label }: { color: string | undefined; label: string }) {
   return (
     <span
       className="preset-swatch"

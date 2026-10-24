@@ -89,7 +89,8 @@ export async function withRetry<T>(
       lastError = error
       const name = (error as { name?: string } | null)?.name ?? ''
       if (NOT_RETRYABLE.has(name) || name === 'NotAllowedError') throw error
-      if (attempt < delays.length) await sleep(delays[attempt])
+      const delay = delays[attempt]
+      if (delay !== undefined) await sleep(delay)
     }
   }
   throw new FolderBusyError(lastError)

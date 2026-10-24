@@ -1,5 +1,6 @@
 import type { TreeNode } from '../schema/types'
 import type { MapLayout } from './layout'
+import { withClassName } from './className'
 import { provideTagFilterView, type TagFilter, type TagFilterResult, type TagState } from './tags'
 
 /**
@@ -96,15 +97,14 @@ export function decorateTags(
     const tagHits = result.folded.get(node.id)
     if (node.className === className && node.data.tagHits === tagHits) return node
     return {
-      ...node,
-      className,
+      ...withClassName(node, className),
       data: node.data.tagHits === tagHits ? node.data : { ...node.data, tagHits },
     }
   })
   const edges = highlight
     ? layout.edges.map((edge) => {
         const className = classOf(edge.target)
-        return edge.className === className ? edge : { ...edge, className }
+        return edge.className === className ? edge : withClassName(edge, className)
       })
     : layout.edges
   return { nodes, edges }

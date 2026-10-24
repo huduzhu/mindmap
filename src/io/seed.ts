@@ -6,7 +6,8 @@ import handdrawnPreset from '../../presets/handdrawn.json'
 import type { Preset, PresetPalette } from '../schema/types'
 import { getPreset, putPreset } from './db'
 
-export const BUILT_IN_PRESETS: Preset[] = [
+/** Never empty: the first entry is the fallback preset. */
+export const BUILT_IN_PRESETS: [Preset, ...Preset[]] = [
   defaultPreset as Preset,
   corporatePreset as Preset,
   darkPreset as Preset,

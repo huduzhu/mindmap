@@ -32,7 +32,8 @@ export function flattenTree(root: TreeNode, { all = false }: { all?: boolean } =
     rows.push({ node, depth, parentId, index, hidden: folded ? countDescendants(node) : 0 })
     if (folded) return
     for (let i = 0; i < children.length; i++) {
-      walk(children[i], depth + 1, node.id, i)
+      const child = children[i]
+      if (child) walk(child, depth + 1, node.id, i)
     }
   }
   walk(root, 0, null, 0)

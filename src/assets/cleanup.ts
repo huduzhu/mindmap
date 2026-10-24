@@ -105,7 +105,7 @@ async function moveToTrash(assets: SyncFolder, name: string): Promise<void> {
  * to `_assets/_trash` first.
  */
 export async function cleanupAssets(
-  options: { now?: Date; folder?: SyncFolder | null } = {},
+  options: { now?: Date; folder?: SyncFolder | null | undefined } = {},
 ): Promise<CleanupResult> {
   const now = options.now ?? new Date()
   const stamp = now.toISOString()

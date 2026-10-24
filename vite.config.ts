@@ -33,7 +33,7 @@ export default defineConfig(({ mode }) => {
   return {
     // "/" by default; BASE_PATH=/mindmap/ for a GitHub Pages project site.
     base: basePath(process.env.BASE_PATH),
-    define: testOnly ? { 'process.env.NODE_ENV': JSON.stringify('development') } : undefined,
+    ...(testOnly ? { define: { 'process.env.NODE_ENV': JSON.stringify('development') } } : {}),
     plugins: [
       react(),
       contentSecurityPolicy,

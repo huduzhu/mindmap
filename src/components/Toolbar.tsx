@@ -91,10 +91,11 @@ export function Toolbar() {
     const target = e.target as HTMLElement
     const idx = tabRefs.current.findIndex((el) => el === target)
     const next = idx === -1 ? -1 : tabKeyTarget(e.key, idx, tabs.length)
-    if (next === -1) return
+    // -1 (no move) has no tab.
+    const tab = tabs[next]
+    if (!tab) return
     e.preventDefault()
-    const id = tabs[next].id
-    useEditor.getState().setView(id)
+    useEditor.getState().setView(tab.id)
     tabRefs.current[next]?.focus()
   }
 

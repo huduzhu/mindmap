@@ -11,7 +11,8 @@ export function applyPresetTheme(preset: Preset): void {
   root.style.setProperty('--mms-edge', palette.edge)
   root.style.setProperty(
     '--mms-accent',
-    readableAccent(palette.branchColors[0], palette.background),
+    // Presets have at least three branch colours (preset.schema.json).
+    readableAccent(palette.branchColors[0] ?? palette.edge, palette.background),
   )
   root.style.setProperty('--mms-font', font.family)
   // Native controls (scrollbars, selects, date pickers) follow the palette too.
@@ -24,7 +25,7 @@ export function applyPresetTheme(preset: Preset): void {
 function luminance(hex: string): number | null {
   const match = /^#([0-9a-f]{6})$/i.exec(hex)
   if (!match) return null
-  const value = parseInt(match[1], 16)
+  const value = parseInt(match[1] ?? '', 16)
   const channel = (shift: number) => {
     const c = ((value >> shift) & 0xff) / 255
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
@@ -50,11 +51,11 @@ export function readableAccent(accent: string, background: string): string {
     if (fg === null || bg === null || (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05) >= 4.5)
       break
     const value = parseInt(color.slice(1), 16)
-    const mixed = [16, 8, 0].map((shift) => {
+    const [r = 0, g = 0, b = 0] = [16, 8, 0].map((shift) => {
       const c = (value >> shift) & 0xff
       return Math.round(c + ((bg < 0.18 ? 255 : 0) - c) * 0.1)
     })
-    color = `#${((1 << 24) + (mixed[0] << 16) + (mixed[1] << 8) + mixed[2]).toString(16).slice(1)}`
+    color = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
   }
   return color
 }

@@ -111,10 +111,11 @@ export function useBoxSelect(options: {
         setTimeout(() => {
           justSelectedRef.current = false
         }, 0)
-        if (ids.length === 0) return
+        const [firstId, ...moreIds] = ids
+        if (firstId === undefined) return
         const editor = useEditor.getState()
-        editor.select(ids[0])
-        for (const id of ids.slice(1)) editor.select(id, true)
+        editor.select(firstId)
+        for (const id of moreIds) editor.select(id, true)
       }
       const stop = () => {
         window.removeEventListener('pointermove', onMove)

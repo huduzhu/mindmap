@@ -19,7 +19,7 @@ export interface MapNodeData extends Record<string, unknown> {
   /** 0 for the root (#85: spoken as "level N"). */
   depth: number
   /** Tag filter matches hidden inside this folded node ("+2 tagged", #150). */
-  tagHits?: number
+  tagHits?: number | undefined
 }
 
 export interface MapEdgeData extends Record<string, unknown> {
@@ -413,7 +413,8 @@ function computeGeometry(root: TreeNode, preset: Preset, links?: NodeLink[]): Ma
     } else if (h.depth === 1) {
       const index = result.children.indexOf(h)
       branchColor =
-        branchColors[((index % branchColors.length) + branchColors.length) % branchColors.length]
+        branchColors[((index % branchColors.length) + branchColors.length) % branchColors.length] ??
+        preset.palette.edge
       branchOf.set(treeNode.id, branchColor)
     } else {
       const parentDatum = h.parent!.data as unknown as LayoutDatum

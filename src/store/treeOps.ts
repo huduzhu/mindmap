@@ -18,8 +18,10 @@ export interface LocatedNode {
 export function findNode(root: TreeNode, id: string): LocatedNode | null {
   const walk = (node: TreeNode, parent: TreeNode | null, index: number): LocatedNode | null => {
     if (node.id === id) return { node, parent, index }
-    for (let i = 0; i < (node.children?.length ?? 0); i++) {
-      const found = walk(node.children![i], node, i)
+    const children = node.children ?? []
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i]
+      const found = child ? walk(child, node, i) : null
       if (found) return found
     }
     return null
@@ -294,7 +296,8 @@ export function indentNode(root: TreeNode, id: string): TreeNode {
   if (root.id === id) return root
   const located = findNode(root, id)
   if (!located?.parent || located.index === 0) return root
-  const newParent = located.parent.children![located.index - 1]
+  const newParent = located.parent.children?.[located.index - 1]
+  if (!newParent) return root
   return moveNode(root, id, newParent.id)
 }
 
@@ -410,7 +413,10 @@ export function pathTo(root: TreeNode, id: string): TreeNode[] | null {
 export function visibleAncestor(root: TreeNode, id: string): string | null {
   const path = pathTo(root, id)
   if (!path) return null
-  for (let i = 0; i < path.length - 1; i++) if (path[i].collapsed) return path[i].id
+  for (let i = 0; i < path.length - 1; i++) {
+    const node = path[i]
+    if (node?.collapsed) return node.id
+  }
   return id
 }
 

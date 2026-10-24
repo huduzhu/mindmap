@@ -65,7 +65,8 @@ function moveInGrid(event: KeyboardEvent<HTMLDivElement>, columns: number) {
     ArrowUp: -columns,
   }
   let next: number | null = null
-  if (event.key in step) next = Math.min(options.length - 1, Math.max(0, index + step[event.key]))
+  if (event.key in step)
+    next = Math.min(options.length - 1, Math.max(0, index + (step[event.key] ?? 0)))
   else if (event.key === 'Home') next = 0
   else if (event.key === 'End') next = options.length - 1
   if (next === null) return

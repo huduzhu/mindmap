@@ -4,7 +4,7 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
-    "types": ["vite/client", "vitest/globals", "node"],
+    "types": ["vite/client"],
     "allowArbitraryExtensions": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -22,7 +22,11 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  /* Tests and their helpers are checked by tsconfig.test.json. */
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test"]
 }

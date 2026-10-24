@@ -18,11 +18,18 @@ export interface HeaderSize {
   height: number
 }
 
-const u16be = (b: Uint8Array, i: number) => (b[i] << 8) | b[i + 1]
-const u16le = (b: Uint8Array, i: number) => b[i] | (b[i + 1] << 8)
-const u24le = (b: Uint8Array, i: number) => b[i] | (b[i + 1] << 8) | (b[i + 2] << 16)
+/**
+ * One byte, or 0 past the end. Every caller combines bytes with bitwise
+ * operators, which already read a missing byte (undefined) as 0.
+ */
+const byteAt = (b: Uint8Array, i: number): number => b[i] ?? 0
+const u16be = (b: Uint8Array, i: number) => (byteAt(b, i) << 8) | byteAt(b, i + 1)
+const u16le = (b: Uint8Array, i: number) => byteAt(b, i) | (byteAt(b, i + 1) << 8)
+const u24le = (b: Uint8Array, i: number) =>
+  byteAt(b, i) | (byteAt(b, i + 1) << 8) | (byteAt(b, i + 2) << 16)
 const u32be = (b: Uint8Array, i: number) =>
-  ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0
+  ((byteAt(b, i) << 24) | (byteAt(b, i + 1) << 16) | (byteAt(b, i + 2) << 8) | byteAt(b, i + 3)) >>>
+  0
 const ascii = (b: Uint8Array, i: number, text: string) => {
   for (let k = 0; k < text.length; k++) if (b[i + k] !== text.charCodeAt(k)) return false
   return true
@@ -46,7 +53,7 @@ function webpSize(b: Uint8Array): HeaderSize | null {
   if (ascii(b, 12, 'VP8L')) {
     // Lossless: signature 0x2f, then width-1 and height-1 in 14 bits each.
     if (b.length < 25 || b[20] !== 0x2f) return null
-    const bits = (b[21] | (b[22] << 8) | (b[23] << 16) | (b[24] << 24)) >>> 0
+    const bits = (u24le(b, 21) | (byteAt(b, 24) << 24)) >>> 0
     return { type: 'image/webp', width: (bits & 0x3fff) + 1, height: ((bits >>> 14) & 0x3fff) + 1 }
   }
   if (ascii(b, 12, 'VP8X')) {
@@ -62,7 +69,8 @@ function jpegSize(b: Uint8Array): HeaderSize | null {
   let i = 2
   while (i + 4 <= b.length) {
     if (b[i] !== 0xff) return null
-    const marker = b[i + 1]
+    // In range: the loop condition leaves at least four bytes from i.
+    const marker = byteAt(b, i + 1)
     if (marker === 0xff) {
       i += 1 // fill byte
       continue

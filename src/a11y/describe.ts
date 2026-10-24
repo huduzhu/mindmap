@@ -39,6 +39,11 @@ function countDescendants(node: TreeNode): number {
   return count
 }
 
+/** The one entry of `list`, or undefined when it has none or several. */
+function only<T>(list: readonly T[]): T | undefined {
+  return list.length === 1 ? list[0] : undefined
+}
+
 const tagList = (tags: readonly string[]) => tags.map((tag) => `#${tag}`).join(', ')
 
 export const quote = (title: string) => `“${title.trim() || t('common.untitled')}”`
@@ -56,7 +61,9 @@ export function describeTreeChange(before: TreeNode, after: TreeNode): string | 
   if (added.length > 0 && removed.length === 0) {
     const tops = added.filter((id) => !added.includes(now.get(id)!.parentId ?? ''))
     if (tops.length > 1) return t('announce.addedMany', { count: tops.length })
-    const top = now.get(tops[0])!
+    // Added nodes form whole branches, so at least one of them is a top.
+    const top = tops[0] === undefined ? undefined : now.get(tops[0])
+    if (!top) return t('announce.mapUpdated')
     const inner = countDescendants(top.node)
     const params = { title: quote(top.node.title), parent: titleIn(now, top.parentId) }
     return inner > 0 ? tn('announce.addedWith', inner, params) : t('announce.added', params)
@@ -65,7 +72,9 @@ export function describeTreeChange(before: TreeNode, after: TreeNode): string | 
     const tops = removed.filter((id) => !removed.includes(was.get(id)!.parentId ?? ''))
     if (tops.length > 1) return t('announce.deletedMany', { count: tops.length })
     const inner = removed.length - 1
-    const title = quote(was.get(tops[0])!.node.title)
+    const top = tops[0] === undefined ? undefined : was.get(tops[0])
+    if (!top) return t('announce.mapUpdated')
+    const title = quote(top.node.title)
     return inner > 0
       ? tn('announce.deletedWith', inner, { title })
       : t('announce.deleted', { title })
@@ -98,33 +107,38 @@ export function describeTreeChange(before: TreeNode, after: TreeNode): string | 
     if (a.notes !== b.notes || a.role !== b.role || a.side !== b.side) other.push(id)
   }
 
-  if (moved.length === 1) {
-    const info = now.get(moved[0])!
+  const movedId = only(moved)
+  if (movedId !== undefined) {
+    const info = now.get(movedId)!
     return t('announce.movedUnder', {
       title: quote(info.node.title),
       parent: titleIn(now, info.parentId),
     })
   }
   if (moved.length > 1) return t('announce.movedMany', { count: moved.length })
-  if (renamed.length === 1) {
-    return t('announce.renamed', { title: quote(now.get(renamed[0])!.node.title) })
+  const renamedId = only(renamed)
+  if (renamedId !== undefined) {
+    return t('announce.renamed', { title: quote(now.get(renamedId)!.node.title) })
   }
   if (renamed.length > 1) return t('announce.renamedMany', { count: renamed.length })
-  if (folded.length === 1) {
-    const node = now.get(folded[0])!.node
+  const foldedId = only(folded)
+  if (foldedId !== undefined) {
+    const node = now.get(foldedId)!.node
     return t(node.collapsed ? 'announce.collapsed' : 'announce.expanded', {
       title: quote(node.title),
     })
   }
   if (folded.length > 1) return tn('announce.foldedMany', folded.length)
-  if (checked.length === 1 && other.length === 0) {
-    const node = now.get(checked[0])!.node
+  const checkedId = only(checked)
+  if (checkedId !== undefined && other.length === 0) {
+    const node = now.get(checkedId)!.node
     return t(node.done ? 'announce.done' : 'announce.notDone', { title: quote(node.title) })
   }
   if (checked.length > 1) return t('announce.updatedMany', { count: checked.length })
-  if (marked.length === 1 && other.length === 0) {
-    const prev = was.get(marked[0])!.node
-    const node = now.get(marked[0])!.node
+  const markedId = only(marked)
+  if (markedId !== undefined && other.length === 0) {
+    const prev = was.get(markedId)!.node
+    const node = now.get(markedId)!.node
     const title = quote(node.title)
     if (prev.icon !== node.icon) {
       return node.icon
@@ -135,8 +149,9 @@ export function describeTreeChange(before: TreeNode, after: TreeNode): string | 
   }
   if (marked.length > 1) return t('announce.updatedMany', { count: marked.length })
   // Tags (#150): "Tags of “Login”: #p1, #backend".
-  if (tagged.length === 1 && other.length === 0) {
-    const node = now.get(tagged[0])!.node
+  const taggedId = only(tagged)
+  if (taggedId !== undefined && other.length === 0) {
+    const node = now.get(taggedId)!.node
     const title = quote(node.title)
     return node.tags?.length
       ? t('announce.tags', { title, tags: tagList(node.tags) })
@@ -144,9 +159,10 @@ export function describeTreeChange(before: TreeNode, after: TreeNode): string | 
   }
   if (tagged.length > 1) return t('announce.updatedMany', { count: tagged.length })
   // Images (#149): added, replaced, removed or given a new description.
-  if (imaged.length === 1 && other.length === 0) {
-    const prev = was.get(imaged[0])!.node
-    const node = now.get(imaged[0])!.node
+  const imagedId = only(imaged)
+  if (imagedId !== undefined && other.length === 0) {
+    const prev = was.get(imagedId)!.node
+    const node = now.get(imagedId)!.node
     const title = quote(node.title)
     if (!node.image) return t('announce.imageRemoved', { title })
     if (prev.image?.asset === node.image.asset) {
@@ -157,9 +173,10 @@ export function describeTreeChange(before: TreeNode, after: TreeNode): string | 
     return t('announce.image', { title })
   }
   if (imaged.length > 1) return t('announce.updatedMany', { count: imaged.length })
-  if (other.length === 1) {
-    const prev = was.get(other[0])!.node
-    const node = now.get(other[0])!.node
+  const otherId = only(other)
+  if (otherId !== undefined) {
+    const prev = was.get(otherId)!.node
+    const node = now.get(otherId)!.node
     if (prev.notes !== node.notes) return t('announce.notes', { title: quote(node.title) })
     if (prev.role !== node.role) {
       return node.role
@@ -174,7 +191,7 @@ export function describeTreeChange(before: TreeNode, after: TreeNode): string | 
   if (other.length > 1) return t('announce.updatedMany', { count: other.length })
   if (reordered.length > 0) {
     // A swap moves two siblings; name the one whose position changed most.
-    const [id] = [...reordered].sort(
+    const [id = ''] = [...reordered].sort(
       (x, y) =>
         Math.abs(now.get(y)!.index - was.get(y)!.index) -
         Math.abs(now.get(x)!.index - was.get(x)!.index),
@@ -235,16 +252,18 @@ export function describeLinkChange(
     a: quote(titles.get(link.from) ?? ''),
     b: quote(titles.get(link.to) ?? ''),
   })
-  if (added.length === 1 && removed.length === 0) return t('announce.linked', pair(added[0]))
-  if (removed.length === 1 && added.length === 0) {
-    return t('announce.unlinked', pair(removed[0]))
+  const addedLink = only(added)
+  if (addedLink && removed.length === 0) return t('announce.linked', pair(addedLink))
+  const removedLink = only(removed)
+  if (removedLink && added.length === 0) {
+    return t('announce.unlinked', pair(removedLink))
   }
   if (added.length + removed.length > 0) return t('announce.linksChanged')
   // Same links, new labels (#148c).
   const labelOf = new Map(before.map((link) => [key(link), link.label]))
   const relabelled = after.filter((link) => labelOf.get(key(link)) !== link.label)
-  if (relabelled.length === 1) {
-    const link = relabelled[0]
+  const link = only(relabelled)
+  if (link) {
     return link.label
       ? t('announce.linkLabel', { ...pair(link), label: quote(link.label) })
       : t('announce.linkLabelCleared', pair(link))

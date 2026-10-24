@@ -79,13 +79,14 @@ export function cutSelection(): { payload: ClipboardPayload; text: string } | nu
   const tree = useProjects.getState().current?.[section]
   if (!tree) return null
   const removable = topLevelSelection(tree, selectedIds(section)).filter((n) => n.id !== tree.id)
-  if (removable.length === 0) return null
+  const [head] = removable
+  if (!head) return null
   const copied = copySelectionOf(
     section,
     removable.map((n) => n.id),
   )
   if (!copied) return null
-  const first = findNode(tree, removable[0].id)
+  const first = findNode(tree, head.id)
   const editor = useEditor.getState()
   editor.applyTree(section, (current) =>
     removeNodes(
@@ -132,9 +133,12 @@ export function pastePayload(payload: ClipboardPayload, mode: PasteMode): boolea
   editor.applyTree(section, () => result.tree, {
     addLinks: section === 'map' ? result.links : [],
   })
-  editor.select(result.pasted[0])
-  for (const id of result.pasted.slice(1)) editor.select(id, true)
-  editor.ensureVisible(result.pasted[0])
+  const [firstPasted, ...morePasted] = result.pasted
+  if (firstPasted !== undefined) {
+    editor.select(firstPasted)
+    for (const id of morePasted) editor.select(id, true)
+    editor.ensureVisible(firstPasted)
+  }
   return true
 }
 

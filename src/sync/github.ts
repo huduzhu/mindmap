@@ -36,7 +36,7 @@ export interface GitHubSettings {
   repo: string
   token: string
   /** Branch to commit to; the repository's default branch when empty. */
-  branch?: string
+  branch?: string | undefined
   /** Folder inside the repository for the project files. */
   folder: string
 }
@@ -175,7 +175,7 @@ async function call<T>(
         'X-GitHub-Api-Version': '2022-11-28',
         ...(init.body ? { 'Content-Type': 'application/json' } : {}),
       },
-      body: init.body ? JSON.stringify(init.body) : undefined,
+      ...(init.body ? { body: JSON.stringify(init.body) } : {}),
     })
   } catch (error) {
     throw new GitHubError('network', error instanceof Error ? error.message : String(error))

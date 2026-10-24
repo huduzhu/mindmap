@@ -39,7 +39,12 @@ beforeEach(async () => {
 async function addProject(name: string, deletedAt?: string): Promise<string> {
   const id = `id-${name.toLowerCase().replace(/\W+/g, '-')}`
   const updatedAt = '2026-09-01T10:00:00.000Z'
-  await db.putProject({ id, project: makeProject(name), updatedAt, deletedAt })
+  await db.putProject({
+    id,
+    project: makeProject(name),
+    updatedAt,
+    ...(deletedAt === undefined ? {} : { deletedAt }),
+  })
   return id
 }
 

@@ -195,13 +195,16 @@ export function GitHubDialog({ onClose }: { onClose: () => void }) {
   }
   const tabDisabled = (id: Tab) => id !== 'settings' && !settings
   const onTabKeyDown = (event: React.KeyboardEvent) => {
-    const next = tabKeyTarget(event.key, TABS.indexOf(tab), TABS.length, (i) =>
-      tabDisabled(TABS[i]),
-    )
-    if (next === -1) return
+    const next = tabKeyTarget(event.key, TABS.indexOf(tab), TABS.length, (i) => {
+      const id = TABS[i]
+      return id === undefined || tabDisabled(id)
+    })
+    // -1 (no move) has no tab.
+    const nextTab = TABS[next]
+    if (nextTab === undefined) return
     event.preventDefault()
-    openTab(TABS[next])
-    document.getElementById(`${titleId}-tab-${TABS[next]}`)?.focus()
+    openTab(nextTab)
+    document.getElementById(`${titleId}-tab-${nextTab}`)?.focus()
   }
   const tabButton = (id: Tab, label: MessageKey) => (
     <button

@@ -21,7 +21,8 @@ export { setImageCodec } from './codec'
 
 /** A node to put the image on, or the parent of a new node made for it. */
 export type ImageTarget =
-  { section: Section; id: string } | { section: Section; parentId: string; title?: string }
+  | { section: Section; id: string }
+  | { section: Section; parentId: string; title?: string | undefined }
 
 /** Put `image` on node `id` (or remove it with null), copying only the path. */
 export function setNodeImage(root: TreeNode, id: string, image: NodeImage | null): TreeNode {

@@ -99,12 +99,15 @@ function sameLinks(a: NodeLink[] | undefined, b: NodeLink[] | undefined): boolea
   if (!a?.length || !b?.length) return !a?.length && !b?.length
   return (
     a.length === b.length &&
-    a.every(
-      (link, index) =>
-        link.from === b[index].from &&
-        link.to === b[index].to &&
-        (link.label ?? '') === (b[index].label ?? ''),
-    )
+    a.every((link, index) => {
+      const other = b[index]
+      return (
+        other !== undefined &&
+        link.from === other.from &&
+        link.to === other.to &&
+        (link.label ?? '') === (other.label ?? '')
+      )
+    })
   )
 }
 
@@ -172,7 +175,10 @@ function entryNewSize(entry: HistoryEntry, seen: WeakSet<object>): number {
 export function historyStackSize(entries: HistoryEntry[]): number {
   const seen = new WeakSet<object>()
   let total = 0
-  for (let i = entries.length - 1; i >= 0; i -= 1) total += entryNewSize(entries[i], seen)
+  for (let i = entries.length - 1; i >= 0; i -= 1) {
+    const entry = entries[i]
+    if (entry) total += entryNewSize(entry, seen)
+  }
   return total
 }
 
@@ -183,7 +189,9 @@ function limitedPast(past: HistoryEntry[]): HistoryEntry[] {
   let total = 0
   let start = capped.length
   while (start > 0) {
-    const size = entryNewSize(capped[start - 1], seen)
+    const entry = capped[start - 1]
+    if (!entry) break
+    const size = entryNewSize(entry, seen)
     if (start < capped.length && total + size > HISTORY_CHAR_BUDGET) break
     total += size
     start -= 1
@@ -545,9 +553,9 @@ export const useEditor = create<EditorState>()((set, get) => ({
   undo: () => {
     const project = useProjects.getState().current
     const { past } = get()
-    if (!project || past.length === 0) return
-    let change: string | null = null
     const entry = past[past.length - 1]
+    if (!project || !entry) return
+    let change: string | null = null
     if (entry.section === 'snapshot' && entry.map && entry.brainstorm) {
       change = t('announce.snapshotRestore')
       useProjects.getState().updateCurrent((p) => ({
@@ -614,9 +622,9 @@ export const useEditor = create<EditorState>()((set, get) => ({
   redo: () => {
     const project = useProjects.getState().current
     const { future } = get()
-    if (!project || future.length === 0) return
-    let change: string | null = null
     const entry = future[future.length - 1]
+    if (!project || !entry) return
+    let change: string | null = null
     if (entry.section === 'snapshot' && entry.map && entry.brainstorm) {
       change = t('announce.snapshotRestore')
       useProjects.getState().updateCurrent((p) => ({

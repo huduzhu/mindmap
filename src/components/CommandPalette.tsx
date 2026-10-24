@@ -45,7 +45,7 @@ function CommandPaletteDialog({
     }
     return matched.map((command, index) => ({
       command,
-      startsGroup: index === 0 || matched[index - 1].group !== command.group,
+      startsGroup: index === 0 || matched[index - 1]?.group !== command.group,
     }))
   }, [commands, query])
 
