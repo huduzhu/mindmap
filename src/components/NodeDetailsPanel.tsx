@@ -3,6 +3,7 @@ import { MAX_NOTES_LENGTH, ROLES, SIDES, type Role, type Side } from '../schema/
 import type { TreeNode } from '../schema/types'
 import { clampNotes, findNode, setNotes, setRole, setSide } from '../store/treeOps'
 import { useEditor } from '../store/editor'
+import { revealNode } from '../search/reveal'
 import { useProjects } from '../store/projects'
 import { notifyPendingEdits, registerPendingEdit } from '../store/pendingEdits'
 import { renderNotesMarkdown } from '../notesMarkdown'
@@ -321,11 +322,7 @@ function NodeLinks({ nodeId }: { nodeId: string }) {
                   type="button"
                   className="node-link-go"
                   title={t('details.selectNode')}
-                  onClick={() => {
-                    const editor = useEditor.getState()
-                    editor.select(other)
-                    editor.ensureVisible(other)
-                  }}
+                  onClick={() => revealNode(other)}
                 >
                   ↔ {titleOf(other)}
                   {label ? (

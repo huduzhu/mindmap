@@ -197,6 +197,9 @@ describe('colour and emoji markers on screen (#148b)', () => {
     fireEvent.submit(input.closest('form')!)
     expect(screen.getByRole('alert')).toHaveTextContent('Type one emoji')
     expect(mapNode('t1')).not.toHaveProperty('icon')
+    // Enter that accepts an IME candidate must not submit the form; a plain Enter may.
+    expect(fireEvent.keyDown(input, { key: 'Enter', keyCode: 229 })).toBe(false)
+    expect(fireEvent.keyDown(input, { key: 'Enter' })).toBe(true)
     fireEvent.change(input, { target: { value: '🧱 bricks' } })
     fireEvent.submit(input.closest('form')!)
     expect(mapNode('t1').icon).toBe('🧱')

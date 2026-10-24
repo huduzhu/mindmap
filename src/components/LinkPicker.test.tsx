@@ -82,4 +82,22 @@ describe('cross-links from the details panel (#90)', () => {
     fireEvent.click(screen.getByRole('button', { name: '↔ Beta' }))
     expect(useEditor.getState().selection).toBe('b')
   })
+
+  it('jumping to a linked node inside a folded branch unfolds and reveals it', () => {
+    useProjects.getState().updateCurrent((p) => ({
+      ...p,
+      map: {
+        ...p.map,
+        children: p.map.children!.map((c) => (c.id === 'a' ? { ...c, collapsed: true } : c)),
+      },
+    }))
+    useEditor.getState().applyLinks(() => [{ from: 'b', to: 'a1' }])
+    useEditor.getState().select('b')
+    renderPanel()
+    const nonce = useEditor.getState().revealNonce
+    fireEvent.click(screen.getByRole('button', { name: '↔ Deep one' }))
+    expect(useEditor.getState().selection).toBe('a1')
+    expect(useEditor.getState().revealNonce).toBe(nonce + 1)
+    expect(useProjects.getState().current!.map.children![0].collapsed).toBeFalsy()
+  })
 })

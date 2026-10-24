@@ -1,4 +1,5 @@
 import { useId, useMemo, useRef, useState } from 'react'
+import { useActiveOptionInView } from '../hooks/useActiveOptionInView'
 import { useDialogA11y } from '../hooks/useDialogA11y'
 import type { TreeNode } from '../schema/types'
 import { useEditor } from '../store/editor'
@@ -70,6 +71,7 @@ function LinkPicker({ from, map }: { from: string; map: TreeNode }) {
   }, [map, links, from, query])
   const activeIndex = results.length === 0 ? 0 : Math.min(active, results.length - 1)
   const optionId = (index: number) => `${listId}-${index}`
+  useActiveOptionInView(results.length > 0 ? optionId(activeIndex) : null)
 
   const pick = (candidate: Candidate | undefined) => {
     if (!candidate) return

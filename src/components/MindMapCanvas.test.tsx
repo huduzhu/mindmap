@@ -775,3 +775,62 @@ describe('MindMapCanvas — details panel you can hide (#144)', () => {
     expect(useEditor.getState().selection).toBe('a')
   })
 })
+
+describe('MindMapCanvas — review 2026-10-24', () => {
+  it('Ctrl+Alt+Z and Ctrl+Alt+Y (AltGr on many keyboards) neither undo nor redo', async () => {
+    await setupMap()
+    const canvas = screen.getByTestId('map-canvas')
+    fireEvent.keyDown(canvas, { key: 'Enter' })
+    act(() => useEditor.getState().setEditing(null))
+    fireEvent.keyDown(canvas, { key: 'z', ctrlKey: true, altKey: true })
+    expect(useProjects.getState().current!.map.children).toHaveLength(3)
+    fireEvent.keyDown(canvas, { key: 'z', ctrlKey: true })
+    expect(useProjects.getState().current!.map.children).toHaveLength(2)
+    fireEvent.keyDown(canvas, { key: 'y', ctrlKey: true, altKey: true })
+    expect(useProjects.getState().current!.map.children).toHaveLength(2)
+    fireEvent.keyDown(canvas, { key: 'y', ctrlKey: true, shiftKey: true })
+    expect(useProjects.getState().current!.map.children).toHaveLength(3)
+  })
+
+  it('map shortcuts do not act while the node menu has focus', async () => {
+    await setupNestedMap()
+    fireEvent.contextMenu(screen.getByText('Idea A'))
+    const item = screen.getByRole('menuitem', { name: 'Rename' })
+    // Alt+, folds the map, even from a focused button, but not from the menu.
+    fireEvent.keyDown(item, { key: ',', code: 'Comma', altKey: true })
+    expect(findNode(useProjects.getState().current!.map, 'a')?.node.collapsed).toBeFalsy()
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+  })
+
+  it('moves the node menu left so it fits in the window', async () => {
+    const width = window.innerWidth
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 400 })
+    const rect = HTMLElement.prototype.getBoundingClientRect
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      return this.classList.contains('node-context-menu')
+        ? ({ left: 0, top: 0, right: 220, bottom: 300, width: 220, height: 300 } as DOMRect)
+        : rect.call(this)
+    })
+    try {
+      await setupMap()
+      fireEvent.contextMenu(screen.getByText('Idea A'), { clientX: 350, clientY: 50 })
+      expect(screen.getByRole('menu').style.left).toBe('172px')
+      fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Rename' }), { key: 'Escape' })
+      fireEvent.contextMenu(screen.getByText('Idea A'), { clientX: 60, clientY: 50 })
+      expect(screen.getByRole('menu').style.left).toBe('60px')
+    } finally {
+      Object.defineProperty(window, 'innerWidth', { configurable: true, value: width })
+    }
+  })
+
+  it('closes the node menu when the user pans or zooms the map', async () => {
+    await setupMap()
+    fireEvent.contextMenu(screen.getByText('Idea A'))
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    const pane = document.querySelector('.react-flow__pane')!
+    fireEvent.wheel(pane, { deltaY: 40, clientX: 100, clientY: 100 })
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+  })
+})

@@ -1,4 +1,5 @@
 import { Fragment, useId, useMemo, useRef, useState } from 'react'
+import { useActiveOptionInView } from '../hooks/useActiveOptionInView'
 import { useDialogA11y } from '../hooks/useDialogA11y'
 import { useUi } from '../store/ui'
 import { useT } from '../i18n'
@@ -51,6 +52,7 @@ function CommandPaletteDialog({
   // Clamped during render instead of reset in an effect: the filtered list
   // shrinks as the query narrows, so the cursor can fall off the end.
   const activeIndex = results.length === 0 ? 0 : Math.min(active, results.length - 1)
+  useActiveOptionInView(results.length > 0 ? optionId(activeIndex) : null)
 
   const runCommand = (command: Command | undefined) => {
     if (!command || command.disabled) return

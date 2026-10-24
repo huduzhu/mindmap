@@ -16,6 +16,7 @@ import { useEditor } from '../store/editor'
 import { useProjects } from '../store/projects'
 import { findNode, setMark } from '../store/treeOps'
 import { useUi } from '../store/ui'
+import { isComposing } from './ime'
 
 /** A small curated set (#148b); any other emoji can be typed below the grid. */
 const MARKERS = [
@@ -201,6 +202,10 @@ export function MarkerPickerHost({ onClose }: { onClose: () => void }) {
                 onChange={(event) => {
                   setTyped(event.target.value)
                   setProblem(null)
+                }}
+                onKeyDown={(event) => {
+                  // Enter that accepts an IME candidate must not submit the form.
+                  if (event.key === 'Enter' && isComposing(event)) event.preventDefault()
                 }}
                 placeholder={t('marks.custom')}
                 aria-label={t('marks.custom')}

@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef } from 'react'
+import { createContext, useContext, useEffect, useRef } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 
 /**
@@ -28,6 +28,14 @@ export function useNodeTouchGestures(id: string, enabled: boolean) {
     if (press.current) clearTimeout(press.current.timer)
     press.current = null
   }
+
+  // A node removed mid-press (deleted, folded away) must not open its menu later.
+  useEffect(() => {
+    const pending = press
+    return () => {
+      if (pending.current) clearTimeout(pending.current.timer)
+    }
+  }, [])
 
   if (!actions || !enabled) return {}
 

@@ -119,6 +119,7 @@ export const zhCN: Record<MessageKey, string> = {
   'row.exportJson': '导出 JSON',
   'row.moveToTrash': '移到回收站',
   'row.duplicated': '已创建副本“{name}”',
+  'row.copySuffix': '（副本）',
   'row.duplicateFailed': '创建副本失败：{error}',
   'row.trashTitle': '移到回收站',
   'row.trashMessage': '把“{name}”移到回收站？之后可在回收站还原{retention}。',

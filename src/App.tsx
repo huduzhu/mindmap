@@ -176,13 +176,8 @@ function App() {
   const openError = useProjects((s) => s.openError)
   const openNotes = useProjects((s) => s.openNotes)
   useEffect(() => {
-    if (openError)
-      showToast(
-        `“${openError.name}” could not be opened: its stored data is damaged.`,
-        'error',
-        9000,
-      )
-  }, [openError])
+    if (openError) showToast(t('start.openError', { name: openError.name }), 'error', 9000)
+  }, [openError, t])
   const syncNotice = useProjects((s) => s.syncNotice)
   useEffect(() => {
     if (!syncNotice) return
