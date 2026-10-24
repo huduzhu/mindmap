@@ -7,6 +7,20 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-10-24
+
+### Fixed
+
+- **Map layout**: a node taller than the one above it (for example one with a picture, or a long
+  wrapped title) no longer overlaps that node and takes its clicks; siblings are always evenly
+  spaced, and a parent now lines up with its child so the connecting line stays straight.
+
+### Changed
+
+- GitHub Actions are pinned to exact commit SHAs, and the code is type-checked with stricter
+  TypeScript settings (`exactOptionalPropertyTypes`, and `noUncheckedIndexedAccess` for app code).
+- Updated development dependencies: `fast-uri` 3.1.9, `serialize-javascript` 7.1.4.
+
 ## [1.0.4] - 2026-10-24
 
 ### Added
@@ -147,7 +161,8 @@ The first public release.
 - Imported, restored, synced and GitHub files nested deeper than 1,000 levels are refused
   instead of freezing the tab.
 
-[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/huduzhu/mindmap/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/huduzhu/mindmap/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/huduzhu/mindmap/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/huduzhu/mindmap/compare/v1.0.1...v1.0.2
