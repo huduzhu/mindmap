@@ -39,6 +39,7 @@
     "build:viewer": "vite build --config viewer.config.ts",
     "viewer": "node scripts/ensure-viewer.mjs",
     "icons": "node scripts/make-icons.mjs",
+    "readme-svgs": "node scripts/make-readme-svgs.mjs",
     "notices": "node scripts/third-party-notices.mjs",
     "lint": "oxlint --deny-warnings",
     "format": "prettier --write .",
