@@ -10,14 +10,15 @@ JSON files, with no API key.
 English and 简体中文 interface · works offline · keyboard- and touch-friendly · MIT licensed
 
 <p align="center">
-  <img src="docs/tour.svg" width="960" alt="An animated tour of Mind Map Studio: starting a project, building a map from the keyboard, folding, the Brainstorm outliner, Outline and split view, notes and roles, tasks, colour and emoji markers, labelled links, tags and filters, pictures, focusing on a branch, search and the command palette, presenting, data safety, folder sync, working with an AI assistant, exporting and installing as an app.">
+  <img src="docs/tour.svg" width="960" alt="An animated tour of Mind Map Studio: building a map from the keyboard with Tab and Enter and flipping a branch to the other side with Alt+Shift+F; the same project in the Outline, the Brainstorm and split view; rich nodes with a role, a colour, a marker, tags, a ticked task and a pasted picture; presenting the map with F5; installing it as an app and editing offline; and syncing through a folder and a round trip with an AI assistant.">
 </p>
 
-**Use it now:** <https://huduzhu.github.io/mindmap/> (built from `main` by
-[`.github/workflows/pages.yml`](.github/workflows/pages.yml), run on demand). Everything still stays in your
-browser. Note that all `*.github.io` project sites of one GitHub account share one origin, and so
-one browser storage: other apps published under `huduzhu.github.io` could read what this one
-stores there. If that matters to you, host your own copy (see [Hosting](#hosting)).
+**Use it now:** <https://huduzhu.github.io/mindmap/>. [`.github/workflows/pages.yml`](.github/workflows/pages.yml)
+deploys it from each published release (it can also be run by hand), so the hosted app always
+matches the latest release. Everything still stays in your browser. Note that all `*.github.io`
+project sites of one GitHub account share one origin, and so one browser storage: other apps
+published under `huduzhu.github.io` could read what this one stores there. If that matters to you,
+host your own copy (see [Hosting](#hosting)).
 
 New here? Open the app and choose **Try the guide · 入门指南**, a bilingual map that teaches the
 shortcuts by using them.
@@ -26,15 +27,20 @@ shortcuts by using them.
 
 ### Three views of one project
 
-- **Mind map** canvas with automatic layout, branches on both sides, folding, drag to move or
-  re-parent, cross-links between any two nodes, a minimap and zoom controls.
+- **Mind map** canvas with automatic layout, branches on both sides (`Alt+Shift+F` flips a branch
+  to the other side), folding, drag to move or re-parent, cross-links between any two nodes, a
+  minimap and zoom controls.
 - **Brainstorm** outliner for quick bullets (`Enter` for the next idea, `Tab` / `Shift+Tab` to
   nest it, even while typing), and **Brainstorm → Copy to map** to turn them into a map.
-- **Outline** view of the map, and a side-by-side **split view**.
-- **Focus on one branch** to work in it as if it were the whole map, with a breadcrumb bar to
-  climb back out, and **Export this branch…** to save just that part.
+- **Outline** view of the map, and a side-by-side **split view** of the Brainstorm and the Outline.
+- **Focus on one branch** (`Alt+→`) to work in it as if it were the whole map, with a breadcrumb
+  bar to climb back out (`Alt+←` or `Esc`), and **Export this branch…** to save just that part.
 - **Fold** anything: `Space` on a node, `Alt+,` collapses all, `Alt+.` expands all, `Alt+1`…`3`
   show that many levels.
+
+<p align="center">
+  <img src="docs/views-and-focus.svg" width="960" alt="Animation: on the mind map, Tab adds a child node and Space folds a branch, leaving a +3 badge. Alt+Right arrow focuses on the Launch Plan branch, which fills the view under a breadcrumb bar. In the Brainstorm outliner, ideas are typed and nested with Tab, then Copy to map turns them into map branches. Split view shows the Brainstorm beside the map's Outline.">
+</p>
 
 ### Rich nodes
 
@@ -48,22 +54,36 @@ shortcuts by using them.
 - **Tags**: end a title with `#p1 #backend` while renaming, or use the tag field. The **Tags**
   filter dims or hides everything else, and `#p1` works in search.
 - **Images**: paste a screenshot (`Ctrl+V`) or drop a picture onto a node. It shows as a
-  thumbnail, and a click opens it full size with zoom and a description for screen readers.
-  Pictures are scaled down and stored once, outside the project file.
+  thumbnail, and a click (or `Shift+Space`) opens it full size with zoom and a description for
+  screen readers. Pictures are scaled down and stored once, outside the project file.
+
+<p align="center">
+  <img src="docs/rich-nodes.svg" width="960" alt="Animation with the details panel open: a node gets the role theme, a teal colour bar and a target emoji marker; Ctrl+Enter ticks child tasks while the parent's progress goes from 1/3 to 3/3; typing #p1 #backend while renaming adds tags and the Tags filter dims the other nodes; a pasted picture appears on a node and opens full size, Markdown notes are written, and a dashed cross-link labelled depends on is drawn.">
+</p>
 
 ### Present
 
 `F5` (or **Present** in the toolbar) walks through the map full screen, one node at a time:
 the central topic, then each branch clockwise, with the camera gliding to each step and the rest
 of the map dimmed. Arrow keys, `Space` or a click go on; `B` blanks the screen, `N` shows the
-node's notes; `Esc` leaves. Presenting never changes your project. Exported HTML pages can
-present too.
+node's notes; `Esc` leaves. `Shift+F5` starts at the selected node instead. Presenting never
+changes your project. Exported HTML pages can present too.
+
+<p align="center">
+  <img src="docs/present-mode.svg" width="960" alt="Animation: F5 turns the map into a dark full-screen presentation that shows the central topic, then the main branches clockwise, then the first branch's children, with earlier steps dimmed and a step counter (4 of 8). N shows the step's notes, B blanks the screen and brings it back, and Shift+F5 starts at the selected node (6 of 8). Finally an exported HTML page opened from a file presents the same way.">
+</p>
 
 ### Find, edit and navigate from the keyboard
 
 `Ctrl+K` opens a command palette with every action, and `Ctrl+F` searches every node, including
-folded and off-screen ones. Every dialog and menu works from the keyboard. See
-[Keyboard shortcuts](#keyboard-shortcuts) below, or the **?** button in the app's hint bar.
+folded and off-screen ones. Copy, cut and paste whole branches with `Ctrl+C`, `Ctrl+X` and
+`Ctrl+V` (`Ctrl+Shift+V` pastes them as siblings); their tags and pictures come along. Every dialog
+and menu works from the keyboard. See [Keyboard shortcuts](#keyboard-shortcuts) below, or the
+**?** button in the app's hint bar.
+
+<p align="center">
+  <img src="docs/present-and-palette.svg" width="960" alt="Animation: Ctrl+F searches for price and opens a folded branch to show the match, 1 of 2, and Enter steps to the next; Ctrl+K opens the command palette and the arrow keys move through its commands. Then the arrow keys move the selection along the right side of the map, F2 renames a node, and the left and down arrows move back and to the next branch.">
+</p>
 
 ### Safe with your data
 
@@ -71,6 +91,10 @@ folded and off-screen ones. Every dialog and menu works from the keyboard. See
 - Persistent undo history, named snapshots, and a Trash with 30-day auto-delete.
 - Whole-library backup and restore as one ZIP, including images.
 - A storage meter with "keep my data", and protection against two tabs overwriting each other.
+
+<p align="center">
+  <img src="docs/data-safety.svg" width="960" alt="Animation in four parts: a new node is saved (Saving…, then Saved) and Ctrl+Z still undoes it after a reload; a snapshot named Before pricing change is saved and an earlier one restored; a project moved to the Trash shows deleted forever in 30 days and is restored; Back up all projects downloads one ZIP, Keep my data protects the browser storage, and edits from another tab are kept as a copy.">
+</p>
 
 ### Sync and share
 
@@ -82,7 +106,13 @@ folded and off-screen ones. Every dialog and menu works from the keyboard. See
   project with its images, or a full backup); drop a file anywhere to import it. Export to project
   JSON, Markdown, OPML, FreeMind, PNG, SVG, a self-contained interactive HTML page, and ZIPs with
   images. OPML and FreeMind are export-only.
-- **Print or save as PDF**: `Ctrl+P` prints the whole map on one page, or the outline.
+- **Print or save as PDF**: `Ctrl+P` prints the whole map on one page, or the outline. PNG, SVG
+  and print show what the map shows: just the focused branch, and without the nodes a tag filter
+  hides.
+
+<p align="center">
+  <img src="docs/export-and-share.svg" width="960" alt="Animation in four parts: a project ZIP dropped onto the window opens with its map and picture; with the map focused on one branch and a #p1 tag filter hiding other nodes, Export, PNG image saves just what the map shows; an exported HTML page opened from a file shows a node's notes from its ✎ marker, zooms and opens a picture; and GitHub milestones saves the project with the message Pricing tiers agreed and the tag v1-plan, then restores a milestone as a snapshot.">
+</p>
 
 ### Looks, languages and accessibility
 
@@ -93,6 +123,10 @@ folded and off-screen ones. Every dialog and menu works from the keyboard. See
   labelled, and keyboard focus is always visible.
 - Touch editing on phones and tablets: an action bar for the selected node, long-press for the
   node menu, double-tap to rename.
+
+<p align="center">
+  <img src="docs/themes-i18n-touch.svg" width="960" alt="Animation in four parts: one map in the built-in presets Default, Dark, Corporate, Hand-drawn and Colour-blind safe; the preset editor warning about a hard-to-read text colour until a darker one is picked, and switching lines from steps to curves; the interface switching from English to 简体中文; and a screen reader announcing Added Pricing under Launch Plan, a visible focus ring, and a tablet's touch action bar with Child, Sibling, Rename, Notes, Delete, Fold and More.">
+</p>
 
 ## Install it as an app
 
@@ -108,6 +142,10 @@ fully offline.
 Updates arrive in the background. When a new version is ready the app shows a banner, saves your
 work and reloads when you choose. Your projects live in that browser's storage on that device,
 so use **Back up all projects** on the start screen, or folder sync, to keep a copy elsewhere.
+
+<p align="center">
+  <img src="docs/pwa-offline.svg" width="960" alt="Animation in three parts: the install icon in the browser's address bar installs Mind Map Studio, which opens in its own window; with the network off the app shows Offline (changes stay on this device), a node is added, the views switch and a reload keeps everything; back online, a banner says A new version of Mind Map Studio is ready, and Reload saves the open project before reloading.">
+</p>
 
 ## Quick start (development)
 
@@ -201,6 +239,10 @@ the window.
 - **Version mismatches:** a file made by a newer version of the app is reported and left alone
   until that computer is updated.
 
+<p align="center">
+  <img src="docs/folder-sync.svg" width="960" alt="Animation in three parts across this computer, a OneDrive folder and another computer: an edit is written to the folder as Launch plan (a1b2).mindmap.json with its picture in _assets and read by the other computer; a removed project moves to _trash instead of being deleted, and sync pauses if many files vanish at once; and when both computers changed the project, a second file tagged conflict keeps the other version.">
+</p>
+
 ## Working with an AI assistant
 
 The app never calls an AI itself. Instead it hands your AI a file and takes the answer back:
@@ -215,6 +257,10 @@ The app never calls an AI itself. Instead it hands your AI a file and takes the 
 3. **Import** the JSON file it returns. Because the reply names the project it came from, the app
    offers to put it back into that project as a single undo step. You can import it as a
    separate project instead.
+
+<p align="center">
+  <img src="docs/ai-roundtrip.svg" width="960" alt="Animation in two parts: the three intents (expand adds ideas to the brainstorm, convert turns the brainstorm into a map, improve sharpens titles and notes); then Export, For AI… makes a convert packet, your AI assistant uses skill/ and checks its reply against schemas/, and importing the reply offers Put the map into Launch plan, which one Undo reverts.">
+</p>
 
 File formats are JSON Schemas in [`schemas/`](schemas/) and are described in
 [`skill/references/schemas.md`](skill/references/schemas.md); ready-made samples are in
@@ -236,6 +282,7 @@ file instead of changing it. Files that don't use them stay readable by every ve
 | `npm run validators` | Regenerate `src/schema/validators.generated.js` after changing a schema in `schemas/` |
 | `npm run viewer` | Rebuild the HTML-export viewer in `public/viewer/` if it is missing or out of date (`npm start` does this too) |
 | `npm run icons` | Regenerate `public/favicon.svg` and the app icons in `public/icons/` |
+| `npm run readme-svgs` | Regenerate the animated SVGs in `docs/` that this README shows (`scripts/make-readme-svgs.mjs`) |
 | `npm run notices` | Regenerate `THIRD_PARTY_NOTICES.md` after changing runtime dependencies |
 | `npm run size` | Check the JavaScript loaded at startup against the 575 KB budget (after a build) |
 | `npm run bench` | Time editing a generated 1,571-node map (needs `npm run preview` running) |
