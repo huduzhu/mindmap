@@ -426,7 +426,9 @@ function computeGeometry(root: TreeNode, preset: Preset, links?: NodeLink[]): Ma
     nodes.push({
       id: treeNode.id,
       type: 'mapNode',
-      position: { x: h.x + h.hgap, y: h.y - height / 2 },
+      // h.x and h.y are the top-left corner of the gap-padded box (width + 2 hgap,
+      // height + 2 vgap), so the node itself starts one gap in on both axes.
+      position: { x: h.x + h.hgap, y: h.y + h.vgap },
       width,
       height,
       measured: { width, height },
