@@ -148,12 +148,14 @@ function Lightbox({
     const last = all.get(event.pointerId)
     if (!last) return
     const now = { x: event.clientX, y: event.clientY }
-    if (all.size >= 2) {
+    // With two or more pointers down, another one than this.
+    const other =
+      all.size >= 2 ? [...all.entries()].find(([key]) => key !== event.pointerId)?.[1] : undefined
+    if (other) {
       // Pinch: zoom by how much the two fingers spread, around their midpoint.
-      const [other] = [...all.entries()].filter(([key]) => key !== event.pointerId)
-      const before = Math.hypot(last.x - other[1].x, last.y - other[1].y)
-      const after = Math.hypot(now.x - other[1].x, now.y - other[1].y)
-      const at = centre((now.x + other[1].x) / 2, (now.y + other[1].y) / 2)
+      const before = Math.hypot(last.x - other.x, last.y - other.y)
+      const after = Math.hypot(now.x - other.x, now.y - other.y)
+      const at = centre((now.x + other.x) / 2, (now.y + other.y) / 2)
       if (before > 0) setView((current) => zoomAt(current, (current.zoom * after) / before, at))
     } else {
       const dx = now.x - last.x

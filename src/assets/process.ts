@@ -221,7 +221,7 @@ function bitmapHasAlpha(bitmap: ImageBitmap): boolean {
   const context = canvas.getContext('2d') as CanvasRenderingContext2D | null
   const pixels = context?.getImageData(0, 0, w, h).data
   if (!pixels) return false
-  for (let i = 3; i < pixels.length; i += 4) if (pixels[i] < 255) return true
+  for (let i = 3; i < pixels.length; i += 4) if ((pixels[i] ?? 255) < 255) return true
   return false
 }
 

@@ -14,7 +14,9 @@ const CRC_TABLE = (() => {
 
 export function crc32(data: Uint8Array): number {
   let crc = 0xffffffff
-  for (let i = 0; i < data.length; i++) crc = CRC_TABLE[(crc ^ data[i]) & 0xff] ^ (crc >>> 8)
+  // Both reads are in range (i < length, index & 0xff < 256); the fallbacks never apply.
+  for (let i = 0; i < data.length; i++)
+    crc = (CRC_TABLE[(crc ^ (data[i] ?? 0)) & 0xff] ?? 0) ^ (crc >>> 8)
   return (crc ^ 0xffffffff) >>> 0
 }
 

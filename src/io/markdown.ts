@@ -110,23 +110,29 @@ export function parseMarkdown(text: string): TreeNode {
   })
 
   // Stack of {node, depth}; a bullet attaches to the nearest stack entry shallower than it.
-  const stack: { node: TreeNode; depth: number }[] = [{ node: root, depth: 0 }]
+  const rootEntry = { node: root, depth: 0 }
+  const stack: { node: TreeNode; depth: number }[] = [rootEntry]
+  // The root entry is never popped, so the stack always has a top.
+  const top = () => stack[stack.length - 1] ?? rootEntry
   const notes = new Map<TreeNode, string[]>()
   let last: TreeNode = root
   for (const rawLine of lines) {
     const bullet = rawLine.match(/^(\s*)[-*]\s+(.+)$/)
     if (bullet) {
-      const spaces = bullet[1].replace(/\t/g, '  ').length
+      // Both groups always take part in a match.
+      const indent = bullet[1] ?? ''
+      const item = bullet[2] ?? ''
+      const spaces = indent.replace(/\t/g, '  ').length
       const depth = Math.floor(spaces / 2)
-      while (stack.length > 1 && stack[stack.length - 1].depth >= depth) {
+      while (stack.length > 1 && top().depth >= depth) {
         stack.pop()
       }
-      const parent = stack[stack.length - 1].node
+      const parent = top().node
       // "- [x] Buy tiles" is a task that is done, "- [ ] …" one that is not (#148a).
-      const task = bullet[2].match(/^\[([ xX])\]\s+(.+)$/)
+      const task = item.match(/^\[([ xX])\]\s+(.+)$/)
       // A leading emoji ("- 🔥 Hot lead") becomes the node's marker (#148b).
       // Trailing "#p1 #backend" are the node's tags (#150).
-      const tagged = splitTrailingTags((task ? task[2] : bullet[2]).trim())
+      const tagged = splitTrailingTags((task ? (task[2] ?? '') : item).trim())
       const marked = splitLeadingEmoji(tagged.title)
       const node = makeNode(marked.title, {
         ...(tagged.tags.length > 0 ? { tags: tagged.tags } : {}),
@@ -142,7 +148,7 @@ export function parseMarkdown(text: string): TreeNode {
     const quote = rawLine.match(/^\s*>\s?(.*)$/)
     if (quote) {
       const collected = notes.get(last) ?? []
-      collected.push(quote[1].trimEnd())
+      collected.push((quote[1] ?? '').trimEnd())
       notes.set(last, collected)
     }
   }

@@ -42,6 +42,12 @@ CI runs these on every push and pull request, and all of them must pass:
   code rather than adding `eslint-disable`/`oxlint-disable` comments, `@ts-ignore` or
   `@ts-expect-error`. Lint enforces the rules of hooks and that component files export only
   components.
+- **Strict TypeScript.** `tsc -b` (part of `npm run build`) checks three projects:
+  `tsconfig.app.json` (app code under `src/`, with `exactOptionalPropertyTypes` and
+  `noUncheckedIndexedAccess`), `tsconfig.test.json` (the `*.test.ts(x)` files and `src/test/`
+  helpers, with `exactOptionalPropertyTypes` but plain indexed access) and `tsconfig.node.json`
+  (the Vite configs and `e2e/`). Narrow an index read with a check rather than `!`, and give
+  an optional property `| undefined` only where code really writes `undefined` to it.
 - **React review rules.** Lint does not catch these, so reviews check them: no `setState` inside
   effects, and no reading or writing `ref.current` during render.
 - **Test what you change.** Add or update unit tests next to the code (`*.test.ts(x)`, Vitest +

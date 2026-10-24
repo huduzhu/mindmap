@@ -59,8 +59,10 @@ export function splitTrailingTags(text: string): { title: string; tags: string[]
   const tags: string[] = []
   for (;;) {
     const match = /(^|\s)#([^\s#]+)$/u.exec(title)
-    if (!match || /^\p{N}+$/u.test(match[2])) break
-    const tag = normalizeNodeTag(match[2])
+    if (!match) break
+    const word = match[2] ?? ''
+    if (/^\p{N}+$/u.test(word)) break
+    const tag = normalizeNodeTag(word)
     if (!tag) break
     const rest = title.slice(0, match.index).trimEnd()
     if (!rest) break

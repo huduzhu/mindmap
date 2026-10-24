@@ -141,7 +141,8 @@ export function StudioSearch({ onRevealBox }: StudioSearchProps = {}) {
     const next = (Math.min(index, matchIds.length - 1) + delta + matchIds.length) % matchIds.length
     if (next === index) {
       // A single match: show it again (the user may have panned away).
-      revealNode(matchIds[next])
+      const id = matchIds[next]
+      if (id !== undefined) revealNode(id)
     } else {
       setIndex(next)
     }

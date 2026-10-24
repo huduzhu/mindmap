@@ -30,7 +30,10 @@ function findTitle(node: TreeNode, needle: string): string | undefined {
     const current = stack.pop()!
     if (fold(current.title).includes(needle)) return current.title
     const children = current.children ?? []
-    for (let i = children.length - 1; i >= 0; i--) stack.push(children[i])
+    for (let i = children.length - 1; i >= 0; i--) {
+      const child = children[i]
+      if (child) stack.push(child)
+    }
   }
   return undefined
 }

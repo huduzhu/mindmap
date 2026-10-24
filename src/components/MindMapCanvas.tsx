@@ -426,9 +426,16 @@ function MindMapCanvasInner() {
   const addLinkFromSelection = useCallback(() => {
     const current = useProjects.getState().current
     const selected = [...useEditor.getState().selectionSet]
-    if (!current || selected.length !== 2 || selected.some((id) => !findNode(current.map, id)))
+    const [from, to] = selected
+    if (
+      !current ||
+      selected.length !== 2 ||
+      from === undefined ||
+      to === undefined ||
+      selected.some((id) => !findNode(current.map, id))
+    )
       return
-    const link = { from: selected[0], to: selected[1] }
+    const link = { from, to }
     if (
       current.links?.some((candidate) => candidate.from === link.from && candidate.to === link.to)
     )
@@ -1525,7 +1532,8 @@ function MindMapCanvasInner() {
                   onClick={() => {
                     closeNodeMenu()
                     const [first, second] = [...useEditor.getState().selectionSet]
-                    void editLinkLabel(first, second)
+                    if (first !== undefined && second !== undefined)
+                      void editLinkLabel(first, second)
                   }}
                 >
                   {t('canvas.labelLink')}

@@ -107,14 +107,17 @@ export function TagInput({
     if (event.key === 'Enter' || event.key === ',') {
       event.preventDefault()
       event.stopPropagation()
-      if (activeOption >= 0) add(options[activeOption])
+      // activeOption is -1 or an index into options.
+      const option = options[activeOption]
+      if (option !== undefined) add(option)
       else add(draft)
       return
     }
-    if (event.key === 'Backspace' && draft === '' && tags.length > 0) {
+    const lastTag = tags[tags.length - 1]
+    if (event.key === 'Backspace' && draft === '' && lastTag !== undefined) {
       event.preventDefault()
       event.stopPropagation()
-      onRemove(tags[tags.length - 1])
+      onRemove(lastTag)
       return
     }
     if (event.key === 'Escape' && expanded) {

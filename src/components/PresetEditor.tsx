@@ -193,7 +193,10 @@ export function PresetEditor({
               disabled={draft.palette.branchColors.length >= 8}
               onClick={() =>
                 setPalette({
-                  branchColors: [...draft.palette.branchColors, draft.palette.branchColors[0]],
+                  branchColors: [
+                    ...draft.palette.branchColors,
+                    ...draft.palette.branchColors.slice(0, 1),
+                  ],
                 })
               }
             >

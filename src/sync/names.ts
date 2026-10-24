@@ -42,7 +42,7 @@ export function idFromFileName(fileName: string): string | null {
     return null
   }
   const matches = [...fileName.matchAll(ID_IN_NAME)]
-  return matches.length > 0 ? matches[matches.length - 1][1] : null
+  return matches.at(-1)?.[1] ?? null
 }
 
 /** JSON with object keys sorted, so equal content always gives equal text. */

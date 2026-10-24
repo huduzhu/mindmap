@@ -172,9 +172,10 @@ export function handleRowFoldKey(
   if (event.altKey || event.ctrlKey || event.metaKey) return false
   if (event.key !== ' ' && event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return false
   const index = selected ? rows.findIndex((row) => row.node.id === selected) : -1
-  if (index === -1) return false
-  event.preventDefault()
+  // findIndex gives -1 (no row) or the selected row's index.
   const row = rows[index]
+  if (!row) return false
+  event.preventDefault()
   const hasChildren = (row.node.children?.length ?? 0) > 0
   const folded = hasChildren && Boolean(row.node.collapsed)
   const editor = useEditor.getState()
@@ -185,7 +186,10 @@ export function handleRowFoldKey(
     else if (hasChildren) toggleFold(section, row.node.id, rootId)
   } else if (event.key === 'ArrowRight') {
     if (folded) toggleFold(section, row.node.id, rootId)
-    else if (hasChildren && rows[index + 1]) editor.select(rows[index + 1].node.id)
+    else {
+      const below = rows[index + 1]
+      if (hasChildren && below) editor.select(below.node.id)
+    }
   } else if (hasChildren && !folded) {
     toggleFold(section, row.node.id, rootId)
   } else if (row.parentId && rows.some((candidate) => candidate.node.id === row.parentId)) {

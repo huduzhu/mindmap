@@ -66,7 +66,7 @@ const HEX = '0123456789abcdef'
 export async function hashBytes(data: ArrayBuffer): Promise<string> {
   const digest = new Uint8Array(await crypto.subtle.digest('SHA-256', data))
   let hex = ''
-  for (const byte of digest) hex += HEX[byte >> 4] + HEX[byte & 15]
+  for (const byte of digest) hex += HEX.charAt(byte >> 4) + HEX.charAt(byte & 15)
   return `sha256-${hex}`
 }
 

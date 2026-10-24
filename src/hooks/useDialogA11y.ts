@@ -65,12 +65,13 @@ export function useDialogA11y(
       }
       if (e.key !== 'Tab') return
       const items = focusable(container)
-      if (items.length === 0) {
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (!first || !last) {
+        // Nothing to focus in the dialog.
         e.preventDefault()
         return
       }
-      const first = items[0]
-      const last = items[items.length - 1]
       const active = document.activeElement as HTMLElement | null
       if (!container.contains(active)) {
         e.preventDefault()

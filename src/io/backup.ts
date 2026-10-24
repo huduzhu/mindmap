@@ -437,12 +437,13 @@ export async function openZipFile(bytes: Uint8Array): Promise<ZipOpenResult> {
   }
   const projects = entries.filter((entry) => /^[^/]+\.json$/i.test(entry.name))
   const isBackup = entries.some((entry) => entry.name === 'manifest.json')
-  if (!isBackup && projects.length === 1) {
+  const [project] = projects
+  if (!isBackup && projects.length === 1 && project) {
     await importAssetEntries(entries, ASSETS_PREFIX)
     return {
       kind: 'project',
-      name: projects[0].name,
-      text: new TextDecoder().decode(projects[0].data),
+      name: project.name,
+      text: new TextDecoder().decode(project.data),
     }
   }
   return { kind: 'backup', result: await restoreEntries(entries) }

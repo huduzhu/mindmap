@@ -529,8 +529,14 @@ export function useCommands(): Command[] {
 
   // Label the link between the two selected map nodes (#148c).
   const pair = [...selectionSet]
-  const linkedPair =
-    pair.length === 2 && linkBetween(current?.links, pair[0], pair[1]) ? pair : null
+  const [first, second] = pair
+  const linkedPair: [string, string] | null =
+    pair.length === 2 &&
+    first !== undefined &&
+    second !== undefined &&
+    linkBetween(current?.links, first, second)
+      ? [first, second]
+      : null
   commands.push({
     id: 'edit.link-label',
     group: t('group.edit'),

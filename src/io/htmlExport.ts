@@ -149,9 +149,8 @@ export async function buildInteractiveHtml(project: Project, preset: Preset): Pr
     }),
   )
   const fills = [escapeHtml(project.name), escapeInlineStyle(css), dataJson, escapeInlineScript(js)]
-  let html = TEMPLATE_PARTS[0]
-  for (let i = 0; i < fills.length; i += 1) {
-    html += fills[i] + TEMPLATE_PARTS[i + 1]
-  }
+  // The part count was checked above, so no fallback below is used.
+  let html = TEMPLATE_PARTS[0] ?? ''
+  for (const [i, fill] of fills.entries()) html += fill + (TEMPLATE_PARTS[i + 1] ?? '')
   return html
 }

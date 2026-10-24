@@ -63,6 +63,7 @@ export function presentationSteps(root: TreeNode): PresentStep[] {
   const stack: TreeNode[][] = [[root]]
   while (stack.length > 0) {
     const level = stack[stack.length - 1]
+    if (!level) break
     const node = level.shift()
     if (!node) {
       stack.pop()
@@ -94,14 +95,14 @@ export function stepView(steps: PresentStep[], index: number): StepView {
   const at = clampStep(index, steps.length)
   const parentOf = new Map<string, string | null>()
   const revealed = new Set<string>()
-  for (let i = 0; i <= at; i += 1) {
-    revealed.add(steps[i].id)
-    parentOf.set(steps[i].id, steps[i].parent)
+  for (const shown of steps.slice(0, at + 1)) {
+    revealed.add(shown.id)
+    parentOf.set(shown.id, shown.parent)
   }
   const step = steps[at] ?? { id: '', parent: null }
   const group = step.parent ?? step.id
   const fit = [group]
-  for (let i = 0; i <= at; i += 1) if (steps[i].parent === group) fit.push(steps[i].id)
+  for (const shown of steps.slice(0, at + 1)) if (shown.parent === group) fit.push(shown.id)
   const lit = new Set(fit)
   for (let id: string | null | undefined = step.id; id; id = parentOf.get(id)) lit.add(id)
   return { index: at, current: step.id, revealed, lit, group, fit }
