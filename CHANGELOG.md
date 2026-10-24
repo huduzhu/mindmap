@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-10-24
+
 ### Added
 
 - A browser test of the installed app offline: the service worker caches every file of the
@@ -14,6 +16,38 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- **Copy, paste and brainstorm-to-map**: copying and pasting nodes with the keyboard (`Ctrl+C`
+  or `Ctrl+X`, then `Ctrl+V`) and copying Brainstorm bullets into the map now keep node tags and
+  pictures; over-long pasted titles and notes are cut without splitting an emoji; and appending
+  brainstorm bullets past the 1,000-branch limit is refused with a clear message.
+- **Notes drafts and autosave**: a note still being typed is committed before switching projects,
+  going Home, taking or restoring a snapshot, duplicating, moving to the Trash or downloading a
+  backup, and never lands in the project opened next; autosave now writes at least every 5
+  seconds during continuous typing.
+- **Folder sync, thumbnails and Trash**: moving a synced file to `_trash` no longer overwrites an
+  existing file there when a lookup fails; a OneDrive duplicate identical to the project file is
+  moved aside without making a conflict copy; a thumbnail whose picture arrived while it was
+  loading no longer stays stuck on "not available"; renaming, pinning or tagging a trashed
+  project no longer quietly restores it from the Trash; pinning updates other open tabs; and
+  restoring a snapshot applies changes that only touch cross-link labels.
+- **Translation, keyboard and accessibility**: the toast for a damaged stored project is now
+  translated, and duplicated projects use the current language's copy suffix (`(copy)` /
+  `（副本）`); the command palette, link picker and tag suggestions scroll the highlighted
+  option into view as you arrow through them; Chinese input in the tag field and custom-emoji
+  box no longer submits early on `Enter`; clicking a cross-link opens folded branches, leaves
+  branch focus and switches a hiding tag filter to highlight so the target is shown; `Esc` in
+  the preset editor returns to the preset list and restores focus; toolbar and node menus stay
+  inside short or narrow screens, and the node menu closes when you pan or zoom and blocks map
+  shortcuts while focused; `Ctrl+Alt+Z`/`Y` (`AltGr`) no longer undo or redo; and Windows
+  high-contrast mode outlines active options, the current preset and the active filter mode.
+- **Import, export, ZIP and HTML viewer**: corrupt compressed ZIP entries report a checksum
+  error instead of a blank message, truncated central-directory names are refused, and malformed
+  preset or snapshot entries in a backup manifest are skipped without failing a restore whose
+  projects were already stored; lone carriage returns in titles or notes and untitled child
+  nodes survive a Markdown round trip; branch import refuses newer format versions and drops
+  invalid markers like full import; PNG/SVG export and print frame the focused and tag-filtered
+  branch shown on screen; and the interactive HTML viewer shows the `✎` notes marker, closes the
+  notes card on `Esc` and closes an enlarged picture when `F5` starts presentation mode.
 - The Content-Security-Policy browser test no longer fails now and then on CI: it reloaded the
   page before the autosave had landed, which dropped the node it had just added.
 
@@ -113,7 +147,8 @@ The first public release.
 - Imported, restored, synced and GitHub files nested deeper than 1,000 levels are refused
   instead of freezing the tab.
 
-[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/huduzhu/mindmap/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/huduzhu/mindmap/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/huduzhu/mindmap/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/huduzhu/mindmap/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/huduzhu/mindmap/compare/v1.0.0...v1.0.1
