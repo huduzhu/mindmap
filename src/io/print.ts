@@ -7,7 +7,7 @@
  */
 import type { Preset, Project, TreeNode } from '../schema/types'
 import { renderNotesMarkdown } from '../notesMarkdown'
-import { exportCanvasImage } from './image'
+import { exportCanvasImage, exportFrameRoot } from './image'
 
 const escapeHtml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -86,12 +86,14 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   })
 }
 
+/** Prints what the map shows: the focused branch, without nodes a hide-mode tag filter hides. */
 export async function printMap(project: Project, preset: Preset): Promise<void> {
+  const shown = exportFrameRoot(project.map)
   const blob = await exportCanvasImage('svg', preset, project, 'bounds')
   const src = await blobToDataUrl(blob)
   await printHtml(
     project.name,
-    `<div class="map-page"><img src="${src}" alt="${escapeHtml(project.map.title)}"></div>`,
+    `<div class="map-page"><img src="${src}" alt="${escapeHtml(shown.title)}"></div>`,
   )
 }
 

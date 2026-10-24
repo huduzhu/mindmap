@@ -549,13 +549,19 @@ export async function readBranch(
   if (/\.(md|markdown|txt)$/i.test(filename)) {
     const parsed = parseMarkdown(text)
     if (!parsed.children?.length) return null
-    const hasHeading = text.split(/\r?\n/).some((line) => /^#\s+\S/.test(line))
+    const hasHeading = text.split(/\r\n?|\n/).some((line) => /^#\s+\S/.test(line))
     const stem = filename.replace(/\.[^.]+$/, '').trim()
     root = hasHeading || !stem ? parsed : { ...parsed, title: stem }
   } else {
     const parsed = parseJson(text)
     if (!parsed.ok) return null
-    const doc = fillWrapperDefaults(parsed.doc) as {
+    // As importJsonText: a file from a newer app is not offered (the normal
+    // import explains why), and a bad marker or task flag is dropped, not a
+    // reason to refuse.
+    const filled = fillWrapperDefaults(parsed.doc)
+    const declared = declaredMinVersion(filled)
+    if (declared !== null && declared > FORMAT_VERSION) return null
+    const doc = dropInvalidMarks(filled) as {
       kind?: unknown
       sourceProjectId?: string
     }

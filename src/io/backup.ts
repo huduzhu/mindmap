@@ -279,6 +279,12 @@ export async function restoreLibraryBackup(bytes: Uint8Array): Promise<RestoreRe
   return restoreEntries(entries)
 }
 
+/** A manifest entry's name for the "skipped" list, even when the entry is not an object. */
+function entryName(entry: unknown): string {
+  const name = (entry as { name?: unknown } | null | undefined)?.name
+  return String(name ?? '').slice(0, 200)
+}
+
 async function restoreEntries(entries: ZipEntry[]): Promise<RestoreResult> {
   const files = new Map(entries.map((entry) => [entry.name, entry.data]))
   const decoder = new TextDecoder()
@@ -317,12 +323,14 @@ async function restoreEntries(entries: ZipEntry[]): Promise<RestoreResult> {
   // Presets first, so restored projects that use them resolve.
   let presetCount = 0
   const keptPresets: string[] = []
-  for (const entry of manifest.presets ?? []) {
+  // A hand-edited manifest may hold anything here; treat a non-list as empty.
+  const presetEntries = Array.isArray(manifest.presets) ? manifest.presets : []
+  for (const entry of presetEntries) {
     try {
       const preset = readJson(entry.file)
       const validation = validateDoc(preset)
       if (!validation.ok || (preset as { kind?: unknown }).kind !== 'preset') {
-        skipped.push(t('restore.item.preset', { name: entry.name }))
+        skipped.push(t('restore.item.preset', { name: entryName(entry) }))
         continue
       }
       if (await db.getPreset((preset as Preset).name)) {
@@ -332,7 +340,7 @@ async function restoreEntries(entries: ZipEntry[]): Promise<RestoreResult> {
       await db.putPreset(preset as Preset)
       presetCount += 1
     } catch {
-      skipped.push(t('restore.item.preset', { name: entry.name }))
+      skipped.push(t('restore.item.preset', { name: entryName(entry) }))
     }
   }
   if (keptPresets.length > 0) {
@@ -349,7 +357,7 @@ async function restoreEntries(entries: ZipEntry[]): Promise<RestoreResult> {
     try {
       const checked = checkProjectDoc(readJson(entry.file))
       if (!checked.ok) {
-        skipped.push(t('restore.item.project', { name: entry.name }))
+        skipped.push(t('restore.item.project', { name: entryName(entry) }))
         continue
       }
       const { project, stats } = sanitizeProject(checked.project)
@@ -358,19 +366,20 @@ async function restoreEntries(entries: ZipEntry[]): Promise<RestoreResult> {
       const preset = await resolvePreset(project.preset, presetNotes)
       toRestore.push({ backupId: entry.id, project: { ...project, preset } })
     } catch {
-      skipped.push(t('restore.item.project', { name: entry.name }))
+      skipped.push(t('restore.item.project', { name: entryName(entry) }))
     }
   }
   const ids = await useProjects.getState().restoreProjects(toRestore.map((item) => item.project))
   const idMap = new Map(toRestore.map((item, index) => [item.backupId, ids[index]]))
 
   let snapshotCount = 0
-  for (const entry of manifest.snapshots ?? []) {
+  const snapshotEntries = Array.isArray(manifest.snapshots) ? manifest.snapshots : []
+  for (const entry of snapshotEntries) {
     const projectId = idMap.get(entry?.projectId)
     if (!projectId) continue // its project was skipped; already reported
     // A crafted manifest must not store a snapshot the app cannot list (#191).
     if (!isSnapshotEntry(entry)) {
-      skipped.push(t('restore.item.snapshot', { name: String(entry.name).slice(0, 200) }))
+      skipped.push(t('restore.item.snapshot', { name: entryName(entry) }))
       continue
     }
     try {

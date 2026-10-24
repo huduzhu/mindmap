@@ -10,6 +10,7 @@ import { useProjects } from '../store/projects'
 import { validateDoc } from '../schema/validate'
 import type { Project, TreeNode } from '../schema/types'
 import { countNodes } from '../store/treeOps'
+import { FORMAT_VERSION } from '../schema/formatVersion'
 import { resetDatabase } from '../test/resetDb'
 
 const fixture = (rel: string) => readFileSync(path.resolve(process.cwd(), rel), 'utf8')
@@ -843,6 +844,35 @@ describe('readBranch (#102)', () => {
     expect(await readBranch('u.json', JSON.stringify(update), null)).toBeNull()
     expect(await readBranch('bad.json', '{nope', null)).toBeNull()
     expect(await readBranch('bad.json', JSON.stringify({ kind: 'project' }), null)).toBeNull()
+  })
+
+  const branchProject = (extra: Record<string, unknown>, map: Record<string, unknown>) => ({
+    kind: 'project',
+    schemaVersion: 1,
+    name: 'Other',
+    preset: 'default',
+    brainstorm: { id: 'b', title: 'B' },
+    map: { id: 'm', title: 'Other map', children: [{ id: 'x', title: 'X', ...map }] },
+    ...extra,
+  })
+
+  it('does not offer a file from a newer app as a branch, as the normal import refuses it', async () => {
+    const { readBranch } = await import('./import')
+    const future = branchProject({ app: { minVersion: FORMAT_VERSION + 1 } }, {})
+    expect(await readBranch('future.json', JSON.stringify(future), null)).toBeNull()
+    const now = branchProject({ app: { minVersion: FORMAT_VERSION } }, {})
+    expect(await readBranch('now.json', JSON.stringify(now), null)).not.toBeNull()
+  })
+
+  it('still offers a branch whose marker or colour is unusable, without the bad mark', async () => {
+    const { readBranch } = await import('./import')
+    const odd = branchProject({}, { icon: 'not an emoji', color: 'purple-ish' })
+    const branch = (await readBranch('odd.json', JSON.stringify(odd), null))!
+    expect(branch).not.toBeNull()
+    const child = branch.payload.nodes[0].children![0]
+    expect(child.title).toBe('X')
+    expect(child.icon).toBeUndefined()
+    expect(child.color).toBeUndefined()
   })
 })
 

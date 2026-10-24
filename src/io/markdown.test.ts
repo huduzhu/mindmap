@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { t } from '../i18n'
 import type { TreeNode } from '../schema/types'
 import { exportToMarkdown, flattenTitle, parseMarkdown } from './markdown'
 
@@ -108,6 +109,62 @@ describe('markdown round-trip', () => {
     expect(parsed.children![0].notes).toBe('First line\n\n- not a bullet\n  indented')
     expect(parsed.children![0].children![0].notes).toBe('Monday')
     expect(parsed.children![1].notes).toBeUndefined()
+  })
+})
+
+describe('markdown round-trip keeps every node', () => {
+  it('treats a lone carriage return as a line break in titles and notes', () => {
+    const root: TreeNode = {
+      id: 'r',
+      title: 'Plan',
+      children: [
+        {
+          id: 'a',
+          title: 'Old\rMac',
+          notes: 'one\rtwo',
+          children: [{ id: 'a1', title: 'Child' }],
+        },
+        { id: 'b', title: 'After' },
+      ],
+    }
+    const markdown = exportToMarkdown(root)
+    expect(markdown).not.toContain('\r')
+    const parsed = parseMarkdown(markdown)
+    expect(titles(parsed)).toEqual(['Plan', 'Old Mac', 'Child', 'After'])
+    expect(parsed.children![0].notes).toBe('one\ntwo')
+    expect(parsed.children![0].children![0].title).toBe('Child')
+  })
+
+  it('writes an untitled child as "Untitled" so it and its children come back', () => {
+    const root: TreeNode = {
+      id: 'r',
+      title: 'Plan',
+      children: [
+        {
+          id: 'a',
+          title: '',
+          children: [{ id: 'a1', title: '  ', children: [{ id: 'a2', title: 'Deep' }] }],
+        },
+        { id: 'b', title: 'Sibling' },
+      ],
+    }
+    const parsed = parseMarkdown(exportToMarkdown(root))
+    expect(shape(parsed)).toEqual({
+      title: 'Plan',
+      children: [
+        {
+          title: 'Untitled',
+          children: [{ title: 'Untitled', children: [{ title: 'Deep', children: [] }] }],
+        },
+        { title: 'Sibling', children: [] },
+      ],
+    })
+  })
+
+  it('does not take an empty heading as the root title', () => {
+    const parsed = parseMarkdown('#   \n- one\n')
+    expect(parsed.title).toBe(t('import.outlineRoot'))
+    expect(parsed.children?.map((child) => child.title)).toEqual(['one'])
   })
 })
 

@@ -26,6 +26,7 @@ import {
 import { useT, type MessageKey } from '../i18n'
 import { decorateLayout, type MapNodeData } from '../map/layout'
 import { activeTagFilter, tagFilterView } from '../map/tags'
+import { pruneHiddenByTags } from '../map/shownTree'
 import { getCachedLayout, resetCachedLayout } from './canvasLayout'
 import { clampMenuLeft } from './menuPosition'
 import {
@@ -222,11 +223,8 @@ function MindMapCanvasInner() {
   const tagFilter = tagView ? filterOn : null
   const keepId = tagFilter?.hide ? editing : null
   const shownRoot = useMemo(
-    () =>
-      viewRoot && tagView && tagFilter?.hide
-        ? tagView.prune(viewRoot, tagFilter, keepId ? new Set([keepId]) : undefined)
-        : viewRoot,
-    [viewRoot, tagView, tagFilter, keepId],
+    () => (viewRoot ? pruneHiddenByTags(viewRoot, tagFilter, keepId) : viewRoot),
+    [viewRoot, tagFilter, keepId],
   )
   const tagResult = useMemo(
     () => (viewRoot && tagView && tagFilter ? tagView.apply(viewRoot, tagFilter) : null),

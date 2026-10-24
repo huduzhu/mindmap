@@ -9,10 +9,12 @@ import { splitTrailingTags } from '../map/tags'
 // of line breaks (and the whitespace around them) into a single space.
 //
 // Done with split/trim rather than /\s*\r?\n\s*/g: that regex backtracks
-// quadratically on a long run of spaces without a newline (ReDoS).
+// quadratically on a long run of spaces without a newline (ReDoS). A lone "\r"
+// counts as a line break too: the import splits lines on it, so left in place
+// it would cut the bullet (and drop the node with its subtree).
 export function flattenTitle(title: string): string {
-  if (!title.includes('\n')) return title
-  const parts = title.split('\n')
+  if (!title.includes('\n') && !title.includes('\r')) return title
+  const parts = title.replace(/\r\n?/g, '\n').split('\n')
   const last = parts.length - 1
   const kept: string[] = []
   parts.forEach((part, index) => {
@@ -30,7 +32,7 @@ function noteLines(notes: string | undefined, indent: string): string[] {
   if (!notes?.trim()) return []
   return notes
     .trimEnd()
-    .split(/\r?\n/)
+    .split(/\r\n?|\n/)
     .map((line) => (line.trim() ? `${indent}> ${line}` : `${indent}>`))
 }
 
@@ -80,8 +82,11 @@ export function exportToMarkdown(root: TreeNode, options: MarkdownOptions = {}):
   if (rootNotes.length > 0) lines.push(...rootNotes, '')
   const walk = (node: TreeNode, depth: number) => {
     for (const child of node.children ?? []) {
+      // An empty title would leave a bare "- " the import cannot read, losing
+      // the node and everything under it; write the same fallback as the root.
+      const title = flattenTitle(child.title)
       lines.push(
-        `${'  '.repeat(depth)}- ${taskBox(child)}${iconPrefix(child)}${flattenTitle(child.title)}${tagSuffix(child)}`,
+        `${'  '.repeat(depth)}- ${taskBox(child)}${iconPrefix(child)}${title.trim() ? title : 'Untitled'}${tagSuffix(child)}`,
       )
       lines.push(...imageLines(child, '  '.repeat(depth + 1), paths))
       lines.push(...noteLines(child.notes, '  '.repeat(depth + 1)))
@@ -93,8 +98,9 @@ export function exportToMarkdown(root: TreeNode, options: MarkdownOptions = {}):
 }
 
 export function parseMarkdown(text: string): TreeNode {
-  const lines = text.split(/\r?\n/)
-  const heading = lines.find((line) => /^#\s+/.test(line))
+  const lines = text.split(/\r\n?|\n/)
+  // A heading with no text ("#   ") does not name the root.
+  const heading = lines.find((line) => /^#\s+\S/.test(line))
   const rootTitle = heading ? heading.replace(/^#\s+/, '').trim() : t('import.outlineRoot')
   const rootTagged = splitTrailingTags(rootTitle)
   const rootMarked = splitLeadingEmoji(rootTagged.title)
