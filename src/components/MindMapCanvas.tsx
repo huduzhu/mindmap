@@ -112,9 +112,9 @@ interface NodeMenuState {
   x: number
   y: number
   /** Set when opened in the lower half of the window: the menu opens upwards from there. */
-  bottom?: number
+  bottom?: number | undefined
   /** The room left in the window that way; a longer menu scrolls (#150 made it longer). */
-  maxHeight?: number
+  maxHeight?: number | undefined
 }
 
 // Fitting a small map used to zoom in to maxZoom (2.5×), so a new project's root

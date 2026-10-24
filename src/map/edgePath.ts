@@ -53,6 +53,24 @@ export function mapEdgePath({
   })[0]
 }
 
+/** The optional props React Flow hands an edge and BaseEdge takes on. */
+export interface BaseEdgeExtras {
+  markerStart?: string
+  markerEnd?: string
+  interactionWidth?: number
+}
+
+/** BaseEdge's optional props, leaving out the ones React Flow did not set. */
+export function baseEdgeExtras(props: {
+  [K in keyof BaseEdgeExtras]: BaseEdgeExtras[K] | undefined
+}): BaseEdgeExtras {
+  const extras: BaseEdgeExtras = {}
+  if (props.markerStart !== undefined) extras.markerStart = props.markerStart
+  if (props.markerEnd !== undefined) extras.markerEnd = props.markerEnd
+  if (props.interactionWidth !== undefined) extras.interactionWidth = props.interactionWidth
+  return extras
+}
+
 export interface LinkArcParams {
   sourceX: number
   sourceY: number
@@ -61,7 +79,7 @@ export interface LinkArcParams {
   sourcePosition: Position
   targetPosition: Position
   /** Which way an arc between two sides bows: away from the map's centre (#165). */
-  bow?: 'up' | 'down'
+  bow?: 'up' | 'down' | undefined
 }
 
 const outward = (position: Position) => (position === Position.Left ? -1 : 1)

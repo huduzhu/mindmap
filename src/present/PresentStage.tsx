@@ -22,6 +22,7 @@ import {
 } from 'react'
 import { IMAGE_GAP, layoutGeometry, MAX_MAP_TAGS, type MapNodeData } from '../map/layout'
 import { thumbSize } from '../map/image'
+import { withClassName } from '../map/className'
 import { resolveNodeStyle } from '../map/nodeStyle'
 import { isDone, isTask, taskProgress } from '../map/marks'
 import { NodeIcon, NodeTags, ProgressChip, TaskCheck } from '../components/NodeMarks'
@@ -53,7 +54,7 @@ export interface PresentStageProps {
   /** The tree to present: the whole map, or the focused branch (#146). */
   root: TreeNode
   preset: Preset
-  links?: NodeLink[]
+  links?: NodeLink[] | undefined
   /** Start at this node ("Present from here"); the central topic otherwise. */
   startId?: string | null
   text: PresentText
@@ -176,12 +177,11 @@ function Stage({ root, preset, links, startId, text, announce, onExit }: Present
   const nodes = useMemo(
     () =>
       layout.nodes.map((node) => ({
-        ...node,
+        ...withClassName(node, node.id === currentId ? 'present-current' : undefined),
         draggable: false,
         selectable: false,
         focusable: false,
         hidden: !view.revealed.has(node.id),
-        className: node.id === currentId ? 'present-current' : undefined,
         style: { opacity: view.lit.has(node.id) ? 1 : DIMMED },
       })),
     [layout, view, currentId],

@@ -203,7 +203,8 @@ function draw(bitmap: ImageBitmap, width: number, height: number): AnyCanvas {
 }
 
 function toBlob(canvas: AnyCanvas, type: string, quality?: number): Promise<Blob> {
-  if ('convertToBlob' in canvas) return canvas.convertToBlob({ type, quality })
+  if ('convertToBlob' in canvas)
+    return canvas.convertToBlob(quality === undefined ? { type } : { type, quality })
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error('encode failed'))),

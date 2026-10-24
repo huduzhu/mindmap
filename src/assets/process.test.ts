@@ -23,7 +23,7 @@ interface EncodeCall {
   width: number
   height: number
   type: string
-  quality?: number
+  quality?: number | undefined
 }
 
 /**

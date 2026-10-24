@@ -1,5 +1,5 @@
 import { BaseEdge, type Edge, type EdgeProps } from '@xyflow/react'
-import { mapEdgePath } from '../map/edgePath'
+import { baseEdgeExtras, mapEdgePath } from '../map/edgePath'
 import type { MapEdgeData } from '../map/layout'
 
 type MapEdgeProps = EdgeProps<Edge<MapEdgeData, 'mapEdge'>>
@@ -28,9 +28,7 @@ export function MapEdge({
     <BaseEdge
       path={path}
       style={style}
-      markerStart={markerStart}
-      markerEnd={markerEnd}
-      interactionWidth={interactionWidth}
+      {...baseEdgeExtras({ markerStart, markerEnd, interactionWidth })}
     />
   )
 }

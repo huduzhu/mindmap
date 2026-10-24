@@ -19,8 +19,8 @@ function Harness({
   useDialogA11y(containerRef, {
     isOpen,
     onClose,
-    labelledBy,
-    returnFocusRef: hasTrigger ? triggerRef : undefined,
+    ...(labelledBy === undefined ? {} : { labelledBy }),
+    ...(hasTrigger ? { returnFocusRef: triggerRef } : {}),
   })
   return (
     <>

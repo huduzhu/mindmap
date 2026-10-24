@@ -1,12 +1,16 @@
 import type { Depth, Intent, Role, Side } from './constants'
 
+/**
+ * Optional fields that the editor clears by writing `undefined` (rather than
+ * deleting the key) accept it explicitly; JSON and the schema treat both alike.
+ */
 export interface TreeNode {
   id: string
   title: string
-  notes?: string
-  side?: Side
-  role?: Role
-  collapsed?: boolean
+  notes?: string | undefined
+  side?: Side | undefined
+  role?: Role | undefined
+  collapsed?: boolean | undefined
   /** Task done state (#148a); only shown when `role` is 'task'. */
   done?: boolean
   /** Colour marker (#148b): 1-based slot in the preset's `palette.branchColors`. */
@@ -17,7 +21,7 @@ export interface TreeNode {
   tags?: string[]
   /** Embedded image (#149): bytes kept outside the project by content hash. Format 4. */
   image?: NodeImage
-  children?: TreeNode[]
+  children?: TreeNode[] | undefined
 }
 
 /** An image on a node (#149); the bytes live in the asset store under `asset`. */
@@ -77,9 +81,9 @@ export interface Project {
   preset: PresetRef
   brainstorm: TreeNode
   map: TreeNode
-  links?: NodeLink[]
+  links?: NodeLink[] | undefined
   pinned?: boolean
-  tags?: string[]
+  tags?: string[] | undefined
   updatedAt?: string
   /** File-format metadata written by newer app versions (GE0a); stripped on read. */
   app?: { minVersion?: number }

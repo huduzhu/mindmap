@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { type Command, commandScore, filterCommands } from './commands'
 
 function cmd(id: string, title: string, group: string, keywords?: string): Command {
-  return { id, title, group, keywords, run: () => undefined }
+  return { id, title, group, ...(keywords === undefined ? {} : { keywords }), run: () => undefined }
 }
 
 describe('commandScore', () => {

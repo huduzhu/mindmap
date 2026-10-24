@@ -1,6 +1,6 @@
 import { BaseEdge, type Edge, type EdgeProps } from '@xyflow/react'
 import type { LinkEdgeData } from '../map/layout'
-import { linkArcPath } from '../map/edgePath'
+import { baseEdgeExtras, linkArcPath } from '../map/edgePath'
 
 type LinkEdgeProps = EdgeProps<Edge<LinkEdgeData>>
 
@@ -37,9 +37,7 @@ export function LinkEdge({
     <BaseEdge
       path={path}
       style={style}
-      markerStart={markerStart}
-      markerEnd={markerEnd}
-      interactionWidth={interactionWidth}
+      {...baseEdgeExtras({ markerStart, markerEnd, interactionWidth })}
       {...(label
         ? {
             label,

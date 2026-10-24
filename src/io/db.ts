@@ -20,7 +20,8 @@ export interface HistoryEntry {
   links?: NodeLink[]
   map?: TreeNode
   brainstorm?: TreeNode
-  projectLinks?: NodeLink[]
+  /** Present (even when undefined) on a snapshot of a map that had no links. */
+  projectLinks?: NodeLink[] | undefined
 }
 
 export interface HistoryRecord {

@@ -117,7 +117,10 @@ function templateToProject(template: Template): Project {
 }
 
 function diffAppendOnly(base: TreeNode, updated: TreeNode) {
-  const baseInfo = new Map<string, { title: string; notes?: string; parent: string | null }>()
+  const baseInfo = new Map<
+    string,
+    { title: string; notes: string | undefined; parent: string | null }
+  >()
   const walkBase = (node: TreeNode, parent: string | null) => {
     baseInfo.set(node.id, { title: node.title, notes: node.notes, parent })
     for (const child of node.children ?? []) walkBase(child, node.id)

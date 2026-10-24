@@ -10,7 +10,7 @@
 import type { NodeLink, TreeNode } from '../schema/types'
 import { MAX_TREE_DEPTH, treeDepth } from '../io/sanitize'
 import { flattenTitle as flatten, parseMarkdown } from '../io/markdown'
-import { ROLES, SIDES } from '../schema/constants'
+import { ROLES, SIDES, type Role, type Side } from '../schema/constants'
 import { clampNotes, clampTitle, findNode, MAX_CHILDREN, newId, pathTo } from '../store/treeOps'
 import { cleanLinkLabel } from '../store/links'
 import { cleanImage } from './image'
@@ -150,8 +150,8 @@ function readNode(raw: unknown, depth: number): TreeNode | null {
   if (typeof value.notes === 'string' && value.notes) {
     node.notes = clampNotes(value.notes)
   }
-  if ((ROLES as readonly unknown[]).includes(value.role)) node.role = value.role as TreeNode['role']
-  if ((SIDES as readonly unknown[]).includes(value.side)) node.side = value.side as TreeNode['side']
+  if ((ROLES as readonly unknown[]).includes(value.role)) node.role = value.role as Role
+  if ((SIDES as readonly unknown[]).includes(value.side)) node.side = value.side as Side
   if (value.collapsed === true) node.collapsed = true
   // Task state and markers (#148) travel with a copied branch.
   if (value.done === true) node.done = true

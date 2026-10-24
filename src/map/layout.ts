@@ -19,7 +19,7 @@ export interface MapNodeData extends Record<string, unknown> {
   /** 0 for the root (#85: spoken as "level N"). */
   depth: number
   /** Tag filter matches hidden inside this folded node ("+2 tagged", #150). */
-  tagHits?: number
+  tagHits?: number | undefined
 }
 
 export interface MapEdgeData extends Record<string, unknown> {

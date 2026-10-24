@@ -39,23 +39,25 @@ export default defineConfig({
     { name: 'built', testIgnore: /dev\.spec\.ts$/, use: { baseURL: BUILT_URL } },
     ...(external ? [] : [{ name: 'dev', testMatch: /dev\.spec\.ts$/, use: { baseURL: DEV_URL } }]),
   ],
-  webServer: external
-    ? undefined
-    : [
-        {
-          command: 'npx vite preview --host 127.0.0.1 --port 4173 --strictPort',
-          url: BUILT_URL,
-          cwd: ROOT,
-          reuseExistingServer: !process.env.CI,
-          timeout: 60_000,
-        },
-        {
-          // predev builds the interactive-HTML viewer when it is missing (#55).
-          command: 'npm run dev -- --host 127.0.0.1',
-          url: DEV_URL,
-          cwd: ROOT,
-          reuseExistingServer: !process.env.CI,
-          timeout: 180_000,
-        },
-      ],
+  ...(external
+    ? {}
+    : {
+        webServer: [
+          {
+            command: 'npx vite preview --host 127.0.0.1 --port 4173 --strictPort',
+            url: BUILT_URL,
+            cwd: ROOT,
+            reuseExistingServer: !process.env.CI,
+            timeout: 60_000,
+          },
+          {
+            // predev builds the interactive-HTML viewer when it is missing (#55).
+            command: 'npm run dev -- --host 127.0.0.1',
+            url: DEV_URL,
+            cwd: ROOT,
+            reuseExistingServer: !process.env.CI,
+            timeout: 180_000,
+          },
+        ],
+      }),
 })

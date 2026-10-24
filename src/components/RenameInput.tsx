@@ -29,7 +29,7 @@ interface RenameInputProps {
    * marked done or not done (or made a task). Plain Enter is unchanged.
    */
   onToggleDone?: () => void
-  returnFocusRef?: RefObject<HTMLElement | null>
+  returnFocusRef?: RefObject<HTMLElement | null> | undefined
 }
 
 export function RenameInput({

@@ -156,7 +156,7 @@ describe('reading the clipboard (#101)', () => {
     const source = node('r', 'Root', [
       node('a', 'Alpha', [node('a1', 'Alpha one', undefined, { tags: ['p2'], image })], {
         tags: ['p1', 'work'],
-        image: { ...image, alt: undefined },
+        image: { asset: image.asset, w: 40, h: 30 },
       }),
     ])
     const read = parsePayload(JSON.stringify(copyPayload(source, ['a'])))!
