@@ -98,10 +98,11 @@ These live in the GitHub settings rather than in the code, so they are listed he
 - **Settings → Pages:** Source is **GitHub Actions** (the Pages workflow deploys).
 - **Settings → Environments → github-pages → Deployment branches and tags:** besides `main`,
   allow tags matching `v*`, since a release deploys from its tag.
-- **Settings → Rules → Rulesets → New ruleset → Import a ruleset:** import both files in
+- **Settings → Rules → Rulesets → New ruleset → Import a ruleset:** import the files in
   `.github/rulesets/`. `main.json` blocks force pushes and deletion of `main` and requires a
-  pull request with the `gates` and `e2e` checks passing; `release-tags.json` stops `v*` tags
-  from being moved or deleted.
+  pull request with resolved review threads and the `gates` and `e2e` checks (from GitHub Actions)
+  passing; `release-tags.json` stops `v*` tags from being moved or deleted; `version-branches.json`
+  stops `v*` branches from being created so they never collide with release tags.
 - **Settings → General → Pull Requests:** "Automatically delete head branches" is on.
 - **Settings → Advanced Security:** private vulnerability reporting, Dependabot alerts and
   security updates, and secret scanning with push protection are on.
