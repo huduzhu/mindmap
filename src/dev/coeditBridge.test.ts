@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { createInterface } from 'node:readline'
 import { PassThrough } from 'node:stream'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { formatStartupBanner } from '../../bridge/index.mjs'
 import { createMcpHandler, serveStdio } from '../../bridge/mcp.mjs'
 import { createBridgeRelay, type BridgeRelay } from '../../bridge/relay.mjs'
 
@@ -445,5 +446,89 @@ describe('co-edit local bridge relay and MCP server', () => {
       rev: 2,
       root: { title: bigText },
     })
+  })
+
+  it('rejects invalid propose_edits baseRev and malformed operations at the MCP boundary without calling the relay', async () => {
+    const callBrowser = vi.fn()
+    const stubRelay: BridgeRelay = {
+      start: async () => ({ host: '127.0.0.1', port: 4317, token: 't' }),
+      stop: async () => undefined,
+      getStatus: () => ({
+        connected: true,
+        projectId: 'proj-1',
+        projectName: 'Plan',
+        mode: 'approve-writes',
+        rev: 2,
+      }),
+      callBrowser,
+    }
+    const mcp = createMcpHandler(stubRelay)
+
+    const badPayloads = [
+      {
+        baseRev: 0,
+        summary: 'zero rev',
+        operations: [{ type: 'rename_node', id: 'a', title: 'B' }],
+      },
+      {
+        baseRev: 1.5,
+        summary: 'float rev',
+        operations: [{ type: 'rename_node', id: 'a', title: 'B' }],
+      },
+      { baseRev: 1, summary: 'move missing dest', operations: [{ type: 'move_node', id: 'a' }] },
+      {
+        baseRev: 1,
+        summary: 'add missing title',
+        operations: [{ type: 'add_node', parentId: 'root' }],
+      },
+      {
+        baseRev: 1,
+        summary: 'notes not string',
+        operations: [{ type: 'update_notes', id: 'a', notes: 123 }],
+      },
+      { baseRev: 1, summary: 'unknown op', operations: [{ type: 'delete_all', id: 'a' }] },
+    ]
+
+    for (const [idx, args] of badPayloads.entries()) {
+      const res = (await mcp.handleMessage({
+        jsonrpc: '2.0',
+        id: idx + 1,
+        method: 'tools/call',
+        params: { name: 'propose_edits', arguments: args },
+      })) as { result: { isError?: boolean; content: { text: string }[] } }
+      expect(res.result.isError).toBe(true)
+      expect(res.result.content[0]!.text).toContain('INVALID_ARGS')
+    }
+    expect(callBrowser).not.toHaveBeenCalled()
+  })
+
+  it('redacts configured pairing tokens and controls generated token printing in startup banner', () => {
+    const info = { host: '127.0.0.1' as const, port: 4317, token: 'super-secret-value' }
+
+    // Configured tokens are never printed even in TTY or with --print-token
+    const configured = formatStartupBanner(info, {
+      configuredToken: true,
+      printToken: true,
+      isTTY: true,
+    })
+    expect(configured).not.toContain('super-secret-value')
+    expect(configured).toContain('<configured>')
+
+    // Generated token is omitted when non-TTY without --print-token
+    const nonTty = formatStartupBanner(info, {
+      configuredToken: false,
+      printToken: false,
+      isTTY: false,
+    })
+    expect(nonTty).not.toContain('super-secret-value')
+    expect(nonTty).toContain('--print-token')
+
+    // Generated token is shown when --print-token or TTY is active
+    expect(
+      formatStartupBanner(info, { configuredToken: false, printToken: true, isTTY: false }),
+    ).toContain('super-secret-value')
+    expect(
+      formatStartupBanner(info, { configuredToken: false, printToken: false, isTTY: true }),
+    ).toContain('super-secret-value')
   })
 })

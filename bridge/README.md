@@ -5,19 +5,20 @@ Local loopback WebSocket relay (`127.0.0.1`) + stdio **Model Context Protocol (M
 ## Running locally
 
 ```bash
-npm run bridge
-# or directly with Node 24+:
+npm run bridge -- --print-token
+# or with an explicit configured token:
 node bridge/index.mjs --port 4317 --token <your-pairing-token>
 ```
 
-Diagnostics and the active pairing token print to `stderr`; `stdout` carries pure newline-delimited MCP JSON-RPC 2.0 traffic.
+Diagnostics print to `stderr`; `stdout` carries pure newline-delimited MCP JSON-RPC 2.0 traffic. Configured pairing tokens (`--token` or `MINDMAP_BRIDGE_TOKEN`) are always redacted from startup logs; generated ephemeral tokens are only printed in interactive terminals or when `--print-token` is passed.
 
 ### CLI flags & environment variables
 
 | Flag | Env var | Default | Purpose |
 |---|---|---|---|
 | `--port <n>` | `MINDMAP_BRIDGE_PORT` | `4317` | Loopback port on `127.0.0.1` |
-| `--token <secret>` | `MINDMAP_BRIDGE_TOKEN` | random 24-byte base64url | Per-session pairing token |
+| `--token <secret>` | `MINDMAP_BRIDGE_TOKEN` | random 24-byte base64url | Per-session pairing token (redacted from logs) |
+| `--print-token` | — | `false` | Print an auto-generated ephemeral pairing token to `stderr` even when non-TTY |
 | `--origin <url>` | `MINDMAP_BRIDGE_ORIGIN` | built-in allow-list | Additional allowed browser origin(s) |
 
 ## Hermes Agent configuration

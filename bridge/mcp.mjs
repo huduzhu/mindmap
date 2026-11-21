@@ -86,20 +86,52 @@ export const TOOLS = [
           type: 'array',
           minItems: 1,
           items: {
-            type: 'object',
-            properties: {
-              type: {
-                type: 'string',
-                enum: ['add_node', 'rename_node', 'move_node', 'update_notes'],
+            oneOf: [
+              {
+                type: 'object',
+                properties: {
+                  type: { const: 'add_node' },
+                  parentId: { type: 'string', minLength: 1 },
+                  id: { type: 'string', minLength: 1 },
+                  title: { type: 'string', minLength: 1 },
+                  notes: { type: 'string' },
+                  index: { type: 'integer', minimum: 0 },
+                },
+                required: ['type', 'parentId', 'title'],
+                additionalProperties: false,
               },
-              id: { type: 'string' },
-              parentId: { type: 'string' },
-              newParentId: { type: 'string' },
-              title: { type: 'string' },
-              notes: { type: 'string' },
-              index: { type: 'integer', minimum: 0 },
-            },
-            required: ['type'],
+              {
+                type: 'object',
+                properties: {
+                  type: { const: 'rename_node' },
+                  id: { type: 'string', minLength: 1 },
+                  title: { type: 'string', minLength: 1 },
+                },
+                required: ['type', 'id', 'title'],
+                additionalProperties: false,
+              },
+              {
+                type: 'object',
+                properties: {
+                  type: { const: 'move_node' },
+                  id: { type: 'string', minLength: 1 },
+                  newParentId: { type: 'string', minLength: 1 },
+                  index: { type: 'integer', minimum: 0 },
+                },
+                required: ['type', 'id', 'newParentId'],
+                additionalProperties: false,
+              },
+              {
+                type: 'object',
+                properties: {
+                  type: { const: 'update_notes' },
+                  id: { type: 'string', minLength: 1 },
+                  notes: { type: 'string' },
+                },
+                required: ['type', 'id', 'notes'],
+                additionalProperties: false,
+              },
+            ],
           },
         },
       },
@@ -111,6 +143,72 @@ export const TOOLS = [
 
 function isPlainObject(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
+function isNonEmptyString(value) {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+function isNonNegativeSafeInt(value) {
+  return Number.isSafeInteger(value) && value >= 0
+}
+
+function validateOperation(op, index) {
+  if (!isPlainObject(op)) {
+    return `operations[${index}] must be an object.`
+  }
+  switch (op.type) {
+    case 'add_node':
+      if (!isNonEmptyString(op.parentId)) {
+        return `operations[${index}] (add_node) requires a non-empty string parentId.`
+      }
+      if (!isNonEmptyString(op.title)) {
+        return `operations[${index}] (add_node) requires a non-empty string title.`
+      }
+      if (op.id !== undefined && !isNonEmptyString(op.id)) {
+        return `operations[${index}] (add_node) id must be a non-empty string when provided.`
+      }
+      if (op.notes !== undefined && typeof op.notes !== 'string') {
+        return `operations[${index}] (add_node) notes must be a string when provided.`
+      }
+      if (op.index !== undefined && !isNonNegativeSafeInt(op.index)) {
+        return `operations[${index}] (add_node) index must be a non-negative integer.`
+      }
+      return null
+
+    case 'rename_node':
+      if (!isNonEmptyString(op.id)) {
+        return `operations[${index}] (rename_node) requires a non-empty string id.`
+      }
+      if (!isNonEmptyString(op.title)) {
+        return `operations[${index}] (rename_node) requires a non-empty string title.`
+      }
+      return null
+
+    case 'move_node':
+      if (!isNonEmptyString(op.id)) {
+        return `operations[${index}] (move_node) requires a non-empty string id.`
+      }
+      if (!isNonEmptyString(op.newParentId)) {
+        return `operations[${index}] (move_node) requires a non-empty string newParentId.`
+      }
+      if (op.index !== undefined && !isNonNegativeSafeInt(op.index)) {
+        return `operations[${index}] (move_node) index must be a non-negative integer.`
+      }
+      return null
+
+    case 'update_notes':
+      if (!isNonEmptyString(op.id)) {
+        return `operations[${index}] (update_notes) requires a non-empty string id.`
+      }
+      if (typeof op.notes !== 'string') {
+        return `operations[${index}] (update_notes) requires a string notes field.`
+      }
+      return null
+
+    default:
+      return `operations[${index}] has unsupported type "${String(op.type)}".`
+  }
 }
 
 function toolOk(data) {
@@ -167,14 +265,23 @@ export function createMcpHandler(relay) {
             'The paired project is currently in read-only mode; ask the user to allow edits.',
           )
         }
-        if (typeof args.baseRev !== 'number' || !Number.isFinite(args.baseRev)) {
-          return toolErr('INVALID_ARGS', 'propose_edits requires a numeric baseRev.')
+        if (!Number.isSafeInteger(args.baseRev) || args.baseRev < 1) {
+          return toolErr(
+            'INVALID_ARGS',
+            'propose_edits requires baseRev as a positive integer >= 1.',
+          )
         }
         if (typeof args.summary !== 'string' || !args.summary.trim()) {
           return toolErr('INVALID_ARGS', 'propose_edits requires a non-empty summary.')
         }
         if (!Array.isArray(args.operations) || args.operations.length === 0) {
           return toolErr('INVALID_ARGS', 'propose_edits requires a non-empty operations array.')
+        }
+        for (let i = 0; i < args.operations.length; i++) {
+          const opError = validateOperation(args.operations[i], i)
+          if (opError) {
+            return toolErr('INVALID_ARGS', opError)
+          }
         }
         return toolOk(await relay.callBrowser('propose_edits', args))
       }
