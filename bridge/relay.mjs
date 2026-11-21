@@ -270,7 +270,7 @@ export function createBridgeRelay(options = {}) {
         failAllPending('DISCONNECTED', 'Bridge stopped')
         session = null
         for (const ws of activeSockets) {
-          ws.close(1001, 'Bridge stopping')
+          ws.close(1001, 'Bridge stopping', true)
         }
         activeSockets.clear()
         if (!server.listening) {
@@ -278,6 +278,7 @@ export function createBridgeRelay(options = {}) {
           return
         }
         server.close(() => resolve())
+        server.closeAllConnections()
       }),
 
     getStatus: () => {

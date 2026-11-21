@@ -53,7 +53,10 @@ Use that value for `MINDMAP_BRIDGE_TOKEN` in the MCP configuration and in the Mi
 
 ### Verify the bridge before pairing
 
-Load the new MCP configuration in Hermes. If `/reload-mcp` is available, use it; otherwise restart the Hermes process that owns the MCP connection and open a fresh session. A saved configuration or a successful CLI tool-discovery test does not prove the running Desktop session is using the new connection.
+Load the new MCP configuration in Hermes before probing or pairing:
+
+1. If `/reload-mcp` is available and reconnects the MCP server cleanly, run it and open a fresh session.
+2. In Hermes Desktop — especially after changing `--port`, `MINDMAP_BRIDGE_TOKEN`, or when a previous listener still responds — fully quit Hermes Desktop (closing any tray or background Hermes process so the old stdio bridge exits and releases its port), relaunch Desktop, and start a fresh session. A saved configuration or a successful CLI tool-discovery test does not prove the running Desktop session is using the new connection.
 
 Check the configured port before attempting to pair (replace `4317` below if you changed it):
 
@@ -63,7 +66,7 @@ Invoke-RestMethod -Uri "http://127.0.0.1:$port/health" -TimeoutSec 3
 ```
 
 - `ok: True` and `connected: False` means the bridge is reachable and waiting for a tab. In the open project, choose **Project → Connect AI agent…**, enter that same port and pairing code, and start in **Read-only**.
-- Connection refused means no bridge is listening on that port. Recheck the configured port, executable and entry-point path, and verify that Hermes reloaded the configuration. If the old port still responds, don't switch the browser to it just to get past the error: that listener may belong to an older MCP session with a different pairing code.
+- Connection refused means no bridge is listening on that port. Recheck the configured port, executable and entry-point path, and confirm that Hermes restarted its MCP subprocess (if an older process still owns the port, the new bridge logs `Port <n> on 127.0.0.1 is already in use` to `stderr` and exits). If the old port still responds, don't switch the browser to it just to get past the error: that listener may belong to an older MCP session with a different pairing code.
 - After pairing, use `mindmap_status` in the same Hermes session to confirm the intended project and access mode. An HTTP health response alone does not establish that this is the bridge your session is using.
 
 ## Security model

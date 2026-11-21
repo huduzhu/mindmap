@@ -1,4 +1,6 @@
 // @vitest-environment node
+import { spawn } from 'node:child_process'
+import { once } from 'node:events'
 import { createInterface } from 'node:readline'
 import { PassThrough } from 'node:stream'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -538,5 +540,116 @@ describe('co-edit local bridge relay and MCP server', () => {
     expect(
       formatStartupBanner(info, { configuredToken: false, printToken: false, isTTY: true }),
     ).toContain('super-secret-value')
+  })
+
+  it('immediately releases port on stop even with active HTTP keep-alive and WebSocket connections', async () => {
+    const { relay, info } = await startTestRelay('keepalive-token')
+    const baseUrl = `http://${info.host}:${info.port}`
+    const healthRes = await fetch(`${baseUrl}/health`)
+    expect(healthRes.status).toBe(200)
+    await healthRes.json()
+
+    const wsUrl = `ws://${info.host}:${info.port}/ws`
+    const ws = await pairBrowser(wsUrl, 'keepalive-token')
+    const closed = waitForClose(ws)
+    await relay.stop()
+    const closeFrame = await closed
+    expect(closeFrame.code).toBe(1001)
+
+    const rebound = createBridgeRelay({ port: info.port, token: 'rebound-token' })
+    relays.push(rebound)
+    const reboundInfo = await rebound.start()
+    expect(reboundInfo.port).toBe(info.port)
+
+    const reboundHealth = await fetch(`http://${reboundInfo.host}:${reboundInfo.port}/health`)
+    expect(reboundHealth.status).toBe(200)
+  })
+
+  it('exits cleanly and releases port when stdin closes on bridge/index.mjs', async () => {
+    const child = spawn(
+      process.execPath,
+      ['bridge/index.mjs', '--port', '0', '--token', 'e2e-subproc-token'],
+      { cwd: process.cwd(), stdio: ['pipe', 'pipe', 'pipe'] },
+    )
+    child.stdout.resume()
+
+    let port = 0
+    let stderrText = ''
+    try {
+      port = await new Promise<number>((resolve, reject) => {
+        const cleanup = () => {
+          clearTimeout(timer)
+          child.stderr.off('data', onData)
+          child.off('exit', onEarlyExit)
+        }
+        const timer = setTimeout(() => {
+          cleanup()
+          reject(new Error(`Timed out waiting for bridge startup banner. stderr=${stderrText}`))
+        }, 3000)
+        const onData = (chunk: string) => {
+          stderrText += chunk
+          const match = /Listening on http:\/\/127\.0\.0\.1:(\d+)/.exec(stderrText)
+          if (match?.[1]) {
+            cleanup()
+            resolve(Number(match[1]))
+          }
+        }
+        const onEarlyExit = (code: number | null) => {
+          cleanup()
+          reject(new Error(`Bridge exited early with code ${String(code)}: ${stderrText}`))
+        }
+        child.stderr.setEncoding('utf8')
+        child.stderr.on('data', onData)
+        child.once('exit', onEarlyExit)
+      })
+
+      const healthRes = await fetch(`http://127.0.0.1:${port}/health`)
+      expect(healthRes.status).toBe(200)
+      await healthRes.json()
+
+      child.stdin.end()
+      const [exitCode] = (await once(child, 'exit', {
+        signal: AbortSignal.timeout(3000),
+      })) as [number | null, NodeJS.Signals | null]
+      expect(exitCode).toBe(0)
+
+      const rebound = createBridgeRelay({ port, token: 'after-exit-token' })
+      relays.push(rebound)
+      const reboundInfo = await rebound.start()
+      expect(reboundInfo.port).toBe(port)
+    } finally {
+      if (child.exitCode === null) {
+        child.kill()
+      }
+    }
+  })
+
+  it('exits non-zero with a clear EADDRINUSE message when port is already held', async () => {
+    const { info } = await startTestRelay('occupied-token')
+    const child = spawn(
+      process.execPath,
+      ['bridge/index.mjs', '--port', String(info.port), '--token', 'conflict-token'],
+      { cwd: process.cwd(), stdio: ['pipe', 'pipe', 'pipe'] },
+    )
+    child.stdout.resume()
+
+    let stderrText = ''
+    child.stderr.setEncoding('utf8')
+    child.stderr.on('data', (chunk: string) => {
+      stderrText += chunk
+    })
+
+    try {
+      const [exitCode] = (await once(child, 'exit', {
+        signal: AbortSignal.timeout(3000),
+      })) as [number | null, NodeJS.Signals | null]
+      expect(exitCode).toBe(1)
+      expect(stderrText).toContain(`Port ${info.port} on 127.0.0.1 is already in use`)
+    } finally {
+      child.stdin.end()
+      if (child.exitCode === null) {
+        child.kill()
+      }
+    }
   })
 })

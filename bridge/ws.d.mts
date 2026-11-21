@@ -5,7 +5,7 @@ export const MAX_MESSAGE_BYTES: number
 
 export interface WsConnection {
   sendText: (text: string) => boolean
-  close: (code?: number, reason?: string) => void
+  close: (code?: number, reason?: string, destroy?: boolean) => void
   onMessage: (fn: (text: string) => void) => () => boolean
   onClose: (fn: (code: number, reason: string) => void) => () => boolean
 }

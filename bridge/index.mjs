@@ -74,7 +74,18 @@ async function main() {
     token: config.token,
     extraOrigins: config.extraOrigins,
   })
-  const info = await relay.start()
+  let info
+  try {
+    info = await relay.start()
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'EADDRINUSE') {
+      process.stderr.write(
+        `[mindmap-bridge] Port ${config.port} on 127.0.0.1 is already in use; stop the existing listener or choose another port.\n`,
+      )
+      process.exit(1)
+    }
+    throw error
+  }
 
   // Never write diagnostics to stdout — stdout carries MCP JSON-RPC frames.
   process.stderr.write(
@@ -99,6 +110,9 @@ async function main() {
     void shutdown().finally(() => process.exit(0))
   })
   process.on('SIGTERM', () => {
+    void shutdown().finally(() => process.exit(0))
+  })
+  process.stdout.on('error', () => {
     void shutdown().finally(() => process.exit(0))
   })
 

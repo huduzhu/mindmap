@@ -66,7 +66,7 @@ export function acceptWebSocket(req, socket, head) {
     for (const handler of closeHandlers) handler(code, reason)
   }
 
-  function close(code = 1000, reason = '') {
+  function close(code = 1000, reason = '', destroy = false) {
     if (closed) return
     const reasonBuf = Buffer.from(String(reason), 'utf8').subarray(0, 123)
     const payload = Buffer.allocUnsafe(2 + reasonBuf.length)
@@ -75,6 +75,11 @@ export function acceptWebSocket(req, socket, head) {
     if (!socket.destroyed && socket.writable) {
       socket.write(encodeFrame(OPCODE_CLOSE, payload))
       socket.end()
+      if (destroy) {
+        setImmediate(() => {
+          if (!socket.destroyed) socket.destroy()
+        })
+      }
     }
     emitClose(code, reasonBuf.toString('utf8'))
   }
