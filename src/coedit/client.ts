@@ -43,6 +43,7 @@ let activePort: number | null = null
 let unsubscribeProjects: (() => void) | null = null
 let unsubscribeCoedit: (() => void) | null = null
 let connectionSeq = 0
+let cancelPendingConnection: (() => void) | null = null
 
 function resetBadge(): void {
   useCoeditBadge.setState({ ...DEFAULT_BADGE_STATE })
@@ -177,8 +178,13 @@ export function setBridgeMode(mode: CoeditMode): void {
   }
 }
 
+export function cancelBridgePairing(): void {
+  cancelPendingConnection?.()
+}
+
 export function disconnectBridge(): void {
   connectionSeq += 1
+  cancelBridgePairing()
   const socket = activeSocket
   cleanupConnection()
   if (socket && socket.readyState === WebSocket.OPEN) {
@@ -233,24 +239,28 @@ export function connectToBridge(options: ConnectBridgeOptions): Promise<void> {
     }
 
     const timer = window.setTimeout(() => {
-      if (!settled) {
-        settled = true
-        cleanupConnection()
-        try {
-          ws.close()
-        } catch {
-          // Ignore close failure on timeout.
-        }
-        reject(new CoeditConnectionError('connection_failed', 'Timed out connecting to bridge.'))
-      }
+      abortPairing('Timed out connecting to bridge.')
     }, connectTimeoutMs)
 
-    function finishReject(code: CoeditConnectErrorCode, message: string) {
+    const cancel = () => abortPairing('Pairing cancelled.')
+    cancelPendingConnection = cancel
+
+    function clearPendingConnection() {
       window.clearTimeout(timer)
-      if (!settled) {
-        settled = true
-        reject(new CoeditConnectionError(code, message))
-      }
+      if (cancelPendingConnection === cancel) cancelPendingConnection = null
+    }
+
+    function finishReject(code: CoeditConnectErrorCode, message: string) {
+      if (settled) return
+      settled = true
+      clearPendingConnection()
+      reject(new CoeditConnectionError(code, message))
+    }
+
+    function abortPairing(message: string) {
+      if (settled) return
+      finishReject('connection_failed', message)
+      ws.close()
     }
 
     function sendRpcError(id: string, code: string, message: string) {
@@ -277,7 +287,7 @@ export function connectToBridge(options: ConnectBridgeOptions): Promise<void> {
     })
 
     ws.addEventListener('message', (event) => {
-      if (mySeq !== connectionSeq) return
+      if (mySeq !== connectionSeq || (settled && !welcomed)) return
       let msg: BridgeRpcMessage
       try {
         msg = JSON.parse(String(event.data)) as BridgeRpcMessage
@@ -300,7 +310,7 @@ export function connectToBridge(options: ConnectBridgeOptions): Promise<void> {
         }
 
         welcomed = true
-        window.clearTimeout(timer)
+        clearPendingConnection()
         activeSocket = ws
         activePort = port
         syncBadgeFromSession()

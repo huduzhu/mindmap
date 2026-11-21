@@ -43,6 +43,8 @@ export const coeditMessages = {
   'coedit.op.addNode': 'Add “{title}” under {parent}',
   'coedit.op.renameNode': 'Rename {node} → “{title}”',
   'coedit.op.moveNode': 'Move {node} under {parent}',
+  'coedit.proposedNotes': 'Proposed notes:',
+  'coedit.emptyNotes': 'Empty',
   'coedit.op.updateNotes': 'Update notes on {node}',
   'coedit.error.invalid_port': 'Enter a valid port between 1 and 65535.',
   'coedit.error.empty_token': 'Enter the pairing token shown by the local bridge.',

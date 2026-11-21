@@ -121,6 +121,7 @@ test('Issue #37 acceptance flow: pair Hermes bridge, concurrent edits, conflict,
     expect(propose2.raw.isError).toBeUndefined()
 
     await page.getByTestId('coedit-badge').click()
+    await expect(page.getByTestId('coedit-pending-batch')).toContainText('Hermes conflicting note')
     await page.getByTestId('coedit-approve').click()
     await expect(page.getByTestId('coedit-conflicts')).toContainText('Human v2')
     await expect(page.getByTestId('coedit-conflicts')).toContainText('Hermes conflicting note')
@@ -162,3 +163,33 @@ test('Issue #37 acceptance flow: pair Hermes bridge, concurrent edits, conflict,
     await relay.stop()
   }
 })
+
+for (const dismiss of ['close button', 'leaving the project']) {
+  test(`${dismiss} cancels a handshake that has not finished`, async ({ page }) => {
+    const hello = Promise.withResolvers<void>()
+    let closed = false
+    await page.routeWebSocket('ws://127.0.0.1:4317/ws', (socket) => {
+      socket.onMessage(() => hello.resolve())
+      socket.onClose(() => {
+        closed = true
+      })
+    })
+    await newProject(page)
+    await projectMenu(page, 'Connect AI agent…')
+    const dialog = page.getByTestId('coedit-dialog')
+    await page.getByTestId('coedit-token').fill('synthetic-test-code')
+    await page.getByTestId('coedit-connect').click()
+    await hello.promise
+    if (dismiss === 'close button') {
+      await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+    } else {
+      // Simulate navigation initiated elsewhere while the modal traps pointer input.
+      await page
+        .getByRole('button', { name: 'Home', exact: true })
+        .evaluate((button) => (button as unknown as { click(): void }).click())
+    }
+    await expect(dialog).toHaveCount(0)
+    await expect.poll(() => closed, { timeout: 1500 }).toBe(true)
+    await expect(page.getByTestId('coedit-badge')).toHaveCount(0)
+  })
+}

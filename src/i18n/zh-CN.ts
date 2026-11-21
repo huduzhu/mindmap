@@ -1143,6 +1143,8 @@ export const zhCN: Record<MessageKey, string> = {
   'coedit.op.addNode': '在 {parent} 下添加“{title}”',
   'coedit.op.renameNode': '将 {node} 重命名为“{title}”',
   'coedit.op.moveNode': '将 {node} 移动到 {parent} 下',
+  'coedit.proposedNotes': '建议的备注：',
+  'coedit.emptyNotes': '空白',
   'coedit.op.updateNotes': '更新 {node} 的备注',
   'coedit.error.invalid_port': '请输入 1 到 65535 之间的有效端口号。',
   'coedit.error.empty_token': '请输入本地桥接提供的配对口令。',

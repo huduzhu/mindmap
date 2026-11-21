@@ -1,5 +1,6 @@
-import { useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import {
+  cancelBridgePairing,
   CoeditConnectionError,
   connectToBridge,
   disconnectBridge,
@@ -66,6 +67,9 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
 
   const dialogRef = useRef<HTMLDivElement>(null)
   const titleId = useId()
+  // Navigation can unmount the dialog without invoking its close handler.
+  // Cancel only a pending handshake; closing an already paired dialog keeps the session.
+  useEffect(() => cancelBridgePairing, [])
   useDialogA11y(dialogRef, { isOpen: true, onClose, labelledBy: titleId })
 
   const handleConnect = () => {
@@ -290,7 +294,20 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
                       </div>
                       <ul className="coedit-ops">
                         {batch.operations.map((op, idx) => (
-                          <li key={idx}>{describeOp(op, current?.map, t)}</li>
+                          <li key={idx}>
+                            {describeOp(op, current?.map, t)}
+                            {(op.type === 'add_node' || op.type === 'update_notes') &&
+                            op.notes !== undefined ? (
+                              <div>
+                                <span>{t('coedit.proposedNotes')}</span>
+                                {op.notes === '' ? (
+                                  <span> {t('coedit.emptyNotes')}</span>
+                                ) : (
+                                  <pre className="coedit-notes-preview">{op.notes}</pre>
+                                )}
+                              </div>
+                            ) : null}
+                          </li>
                         ))}
                       </ul>
                       {evalResult && evalResult.errors.length > 0 ? (

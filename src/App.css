@@ -2259,6 +2259,13 @@ body:has(.touch-bar) .toast {
   flex-wrap: wrap;
 }
 
+.coedit-notes-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 12rem;
+  overflow: auto;
+}
+
 .coedit-ops {
   margin: 8px 0;
   padding-left: 18px;
