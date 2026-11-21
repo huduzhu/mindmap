@@ -1119,6 +1119,7 @@ export const zhCN: Record<MessageKey, string> = {
   'coedit.connecting': '正在连接…',
   'coedit.disconnect': '断开连接',
   'coedit.hermesTip': '请在本地仓库目录启动桥接服务，或将其配置到代理的本地工具列表中。',
+  'coedit.hermesConfigSummary': '代理配置示例',
   'coedit.connectedTo': '已通过端口 {port} 与 {agent} 连接项目“{project}”。',
   'coedit.pendingTitle': '待审修改建议',
   'coedit.noPending': '暂无来自代理的待审修改批次。',

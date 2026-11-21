@@ -152,6 +152,16 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
 
   const connInfo = getCoeditConnectionInfo()
   const isConnected = Boolean(projectId)
+  const snippetPort = /^\d+$/.test(portText.trim()) ? portText.trim() : '4317'
+  const hermesConfigSnippet = [
+    'mcp_servers:',
+    '  mindmap:',
+    '    command: "node"',
+    '    args:',
+    '      - "/path/to/mindmap/bridge/index.mjs"',
+    '      - "--port"',
+    `      - "${snippetPort}"`,
+  ].join('\n')
 
   return (
     <div
@@ -226,6 +236,10 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
               </p>
             ) : null}
             <p className="muted">{t('coedit.hermesTip')}</p>
+            <details className="coedit-section">
+              <summary>{t('coedit.hermesConfigSummary')}</summary>
+              <pre className="coedit-notes-preview">{hermesConfigSnippet}</pre>
+            </details>
             <div className="dialog-actions">
               <button type="button" onClick={onClose}>
                 {t('coedit.close')}

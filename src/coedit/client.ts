@@ -85,7 +85,16 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0
 }
 
-function validateProposalParams(params: Record<string, unknown>):
+const ALLOWED_TOP_FIELDS: readonly string[] = ['baseRev', 'summary', 'operations']
+
+const ALLOWED_OP_FIELDS: Record<string, readonly string[]> = {
+  add_node: ['type', 'parentId', 'id', 'title', 'notes', 'index'],
+  rename_node: ['type', 'id', 'title'],
+  move_node: ['type', 'id', 'newParentId', 'index'],
+  update_notes: ['type', 'id', 'notes'],
+}
+
+export function validateProposalParams(params: Record<string, unknown>):
   | {
       ok: true
       baseRev: number
@@ -93,6 +102,9 @@ function validateProposalParams(params: Record<string, unknown>):
       operations: CoeditOp[]
     }
   | { ok: false; message: string } {
+  if (Object.keys(params).some((key) => !ALLOWED_TOP_FIELDS.includes(key))) {
+    return { ok: false, message: 'propose_edits does not accept additional fields.' }
+  }
   const baseRev = params.baseRev
   if (typeof baseRev !== 'number' || !Number.isSafeInteger(baseRev) || baseRev < 1) {
     return { ok: false, message: 'propose_edits requires a positive integer baseRev.' }
@@ -110,7 +122,15 @@ function validateProposalParams(params: Record<string, unknown>):
     if (!isPlainObject(op)) {
       return { ok: false, message: `operations[${i}] must be an object.` }
     }
-    switch (op.type) {
+    const opType = op.type
+    if (typeof opType !== 'string') {
+      return { ok: false, message: `operations[${i}] must have a string type.` }
+    }
+    const allowed = Object.hasOwn(ALLOWED_OP_FIELDS, opType) ? ALLOWED_OP_FIELDS[opType] : undefined
+    if (allowed && Object.keys(op).some((key) => !allowed.includes(key))) {
+      return { ok: false, message: `operations[${i}] contains unexpected fields.` }
+    }
+    switch (opType) {
       case 'add_node':
         if (!isNonEmptyString(op.parentId) || !isNonEmptyString(op.title)) {
           return { ok: false, message: `operations[${i}] (add_node) needs parentId and title.` }

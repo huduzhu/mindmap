@@ -268,6 +268,10 @@ File formats are JSON Schemas in [`schemas/`](schemas/) and are described in
 images) say so with `"app": { "minVersion": n }`, so an older version of the app reports such a
 file instead of changing it. Files that don't use them stay readable by every version.
 
+For live human + AI co-editing without importing or exporting files, start the local MCP bridge
+(`npm run bridge` — see [`bridge/README.md`](bridge/README.md)) and pair your agent (such as Hermes
+Agent) via **Project ▾ → Connect AI agent…** while your map stays open.
+
 ## Development
 
 | Command | What it does |

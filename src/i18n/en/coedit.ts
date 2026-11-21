@@ -19,6 +19,7 @@ export const coeditMessages = {
   'coedit.connecting': 'Connecting…',
   'coedit.disconnect': 'Disconnect',
   'coedit.hermesTip': 'Start the local bridge in your repo or Hermes config with npm run bridge.',
+  'coedit.hermesConfigSummary': 'Hermes Agent config (~/.hermes/config.yaml)',
   'coedit.connectedTo': 'Connected to {agent} on port {port} for “{project}”.',
   'coedit.pendingTitle': 'Pending proposals',
   'coedit.noPending': 'No pending edit batches from the agent.',
