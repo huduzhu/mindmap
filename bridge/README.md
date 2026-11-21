@@ -37,7 +37,34 @@ mcp_servers:
       MINDMAP_BRIDGE_TOKEN: "choose-a-local-pairing-token"
 ```
 
-Then run `/reload-mcp` inside Hermes Agent and connect the open project in Mind Map Studio using the same port and pairing token.
+### Windows: generate a pairing code in PowerShell
+
+Run this block in Windows PowerShell 5.1 or later. It does not require Node on your **PowerShell** PATH. The MCP client still needs Node 24+ to launch the bridge; if it cannot resolve `node`, use the absolute path to `node.exe` as the MCP `command`.
+
+```powershell
+$bytes = New-Object byte[] 24
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }
+$pairingCode = [Convert]::ToBase64String($bytes).Replace('+', '-').Replace('/', '_')
+Set-Clipboard -Value $pairingCode
+```
+
+Use that value for `MINDMAP_BRIDGE_TOKEN` in the MCP configuration and in the Mind Map Studio pairing dialog. Keep it out of chats and logs. Set the bridge entry point to an absolute path in a checkout you intend to keep.
+
+### Verify the bridge before pairing
+
+Load the new MCP configuration in Hermes. If `/reload-mcp` is available, use it; otherwise restart the Hermes process that owns the MCP connection and open a fresh session. A saved configuration or a successful CLI tool-discovery test does not prove the running Desktop session is using the new connection.
+
+Check the configured port before attempting to pair (replace `4317` below if you changed it):
+
+```powershell
+$port = 4317
+Invoke-RestMethod -Uri "http://127.0.0.1:$port/health" -TimeoutSec 3
+```
+
+- `ok: True` and `connected: False` means the bridge is reachable and waiting for a tab. In the open project, choose **Project → Connect AI agent…**, enter that same port and pairing code, and start in **Read-only**.
+- Connection refused means no bridge is listening on that port. Recheck the configured port, executable and entry-point path, and verify that Hermes reloaded the configuration. If the old port still responds, don't switch the browser to it just to get past the error: that listener may belong to an older MCP session with a different pairing code.
+- After pairing, use `mindmap_status` in the same Hermes session to confirm the intended project and access mode. An HTTP health response alone does not establish that this is the bridge your session is using.
 
 ## Security model
 
