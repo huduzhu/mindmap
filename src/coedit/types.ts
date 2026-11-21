@@ -59,7 +59,7 @@ export interface RevisionTrackerState {
 }
 
 export type CoeditInverseOp =
-  | { type: 'remove_added_node'; id: string }
+  | { type: 'remove_added_node'; id: string; parentId: string; node: TreeNode }
   | { type: 'restore_title'; id: string; previousTitle: string; appliedTitle: string }
   | { type: 'restore_notes'; id: string; previousNotes: string; appliedNotes: string }
   | {
@@ -107,7 +107,7 @@ export interface CoeditActivityEntry {
   undone: boolean
 }
 
-export type CoeditResolution = 'take_agent' | 'keep_human'
+export type CoeditResolution = 'keep_human' | { choice: 'take_agent'; reviewedRev: number }
 
 export interface EvaluateBatchResult {
   ok: boolean

@@ -132,12 +132,22 @@ describe('evaluateCoeditBatch', () => {
 
     const resolved = evaluateCoeditBatch(t2, tracker, batch, {
       0: 'keep_human',
-      1: 'take_agent',
+      1: { choice: 'take_agent', reviewedRev: 2 },
     })
     expect(resolved.ok).toBe(true)
     expect(resolved.nextTree.children?.[0]?.notes).toBe('Human v2')
     expect(resolved.nextTree.children?.[1]?.title).toBe('Agent B')
     expect(resolved.nextTree.children?.[2]?.id).toBe('c')
+
+    const t3 = renameNode(t2, 'b', 'Human B again')
+    const newer = recordTreeTransition(tracker, t2, t3)
+    const stale = evaluateCoeditBatch(t3, newer, batch, {
+      0: 'keep_human',
+      1: { choice: 'take_agent', reviewedRev: 2 },
+    })
+    expect(stale.ok).toBe(false)
+    expect(stale.nextTree).toBe(t3)
+    expect(stale.conflicts[0]).toMatchObject({ currentValue: 'Human B again', changedAtRev: 3 })
   })
 
   it('detects node_deleted and parent_deleted conflicts when human removes nodes after baseRev', () => {
@@ -234,6 +244,48 @@ describe('applySelectiveUndo', () => {
     expect(undone.nextTree.children?.[0]?.notes).toBe('Initial A')
     expect(undone.nextTree.children?.[1]?.children?.map((c) => c.id)).toEqual(['b1', 'h1'])
     expect(undone.nextTree.children?.[1]?.children?.[0]?.title).toBe('Task 1')
+  })
+
+  it('undoes an untouched subtree created in one agent batch', () => {
+    const tree = makeTree('root', 'Root')
+    const tracker = createRevisionTracker('proj-1', tree)
+    const batch = makeBatch(1, [
+      { type: 'add_node', parentId: 'root', id: 'new', title: 'Agent parent' },
+      { type: 'add_node', parentId: 'new', id: 'leaf', title: 'Agent leaf' },
+    ])
+    const applied = evaluateCoeditBatch(tree, tracker, batch)
+    expect(applied.ok).toBe(true)
+    const result = applySelectiveUndo(applied.nextTree, applied.inverseOps)
+    expect(result.ok).toBe(true)
+    expect(result.nextTree.children).toEqual([])
+  })
+
+  it('does not remove an agent-created leaf with later human notes', () => {
+    const tree = makeTree('root', 'Root')
+    const tracker = createRevisionTracker('proj-1', tree)
+    const batch = makeBatch(1, [
+      { type: 'add_node', parentId: 'root', id: 'new', title: 'Agent leaf' },
+      { type: 'update_notes', id: 'new', notes: 'Agent notes' },
+    ])
+    const applied = evaluateCoeditBatch(tree, tracker, batch)
+    expect(applySelectiveUndo(applied.nextTree, applied.inverseOps).ok).toBe(true)
+    const edited = setNotes(applied.nextTree, 'new', 'Human notes')
+    const result = applySelectiveUndo(edited, applied.inverseOps)
+    expect(result.ok).toBe(false)
+    expect(result.nextTree).toBe(edited)
+  })
+
+  it('does not remove an agent-created leaf with human notes that the agent never edited', () => {
+    const tree = makeTree('root', 'Root')
+    const tracker = createRevisionTracker('proj-1', tree)
+    const batch = makeBatch(1, [
+      { type: 'add_node', parentId: 'root', id: 'new', title: 'Agent leaf' },
+    ])
+    const applied = evaluateCoeditBatch(tree, tracker, batch)
+    const edited = setNotes(applied.nextTree, 'new', 'Human notes')
+    const result = applySelectiveUndo(edited, applied.inverseOps)
+    expect(result.ok).toBe(false)
+    expect(result.nextTree).toBe(edited)
   })
 
   it('detects conflicts when human modified agent output unless force is true', () => {

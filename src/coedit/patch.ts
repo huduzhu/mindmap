@@ -107,7 +107,7 @@ export function evaluateCoeditBatch(
         }
         addedInBatch.add(id)
         affected.add(id)
-        forwardInverseOps.push({ type: 'remove_added_node', id })
+        forwardInverseOps.push({ type: 'remove_added_node', id, parentId: op.parentId, node })
         break
       }
 
@@ -141,7 +141,7 @@ export function evaluateCoeditBatch(
         const titleRev = tracker.fields[op.id]?.title ?? 0
         if (
           !addedInBatch.has(op.id) &&
-          resolution !== 'take_agent' &&
+          !(resolution?.choice === 'take_agent' && resolution.reviewedRev === titleRev) &&
           titleRev > batch.baseRev &&
           located.node.title !== nextTitle
         ) {
@@ -197,7 +197,7 @@ export function evaluateCoeditBatch(
         const notesRev = tracker.fields[op.id]?.notes ?? 0
         if (
           !addedInBatch.has(op.id) &&
-          resolution !== 'take_agent' &&
+          !(resolution?.choice === 'take_agent' && resolution.reviewedRev === notesRev) &&
           notesRev > batch.baseRev &&
           currentNotes !== nextNotes
         ) {
@@ -293,7 +293,7 @@ export function evaluateCoeditBatch(
         const parentRev = tracker.fields[op.id]?.parent ?? 0
         if (
           !addedInBatch.has(op.id) &&
-          resolution !== 'take_agent' &&
+          !(resolution?.choice === 'take_agent' && resolution.reviewedRev === parentRev) &&
           parentRev > batch.baseRev &&
           located.parent.id !== op.newParentId
         ) {
@@ -339,6 +339,17 @@ export function evaluateCoeditBatch(
   }
 }
 
+// Compare the leaf's authored fields after later operations in the batch have been reversed.
+function leafContent(node: TreeNode): string {
+  const { children, notes, collapsed, ...fields } = node
+  void children
+  return JSON.stringify(
+    Object.entries({ ...fields, notes: notes ?? '', collapsed: collapsed ?? false }).sort(
+      ([a], [b]) => a.localeCompare(b),
+    ),
+  )
+}
+
 /**
  * Selectively undo a previously applied agent batch using its `inverseOps`
  * without disturbing unrelated human edits made afterward. If a human edited
@@ -372,6 +383,19 @@ export function applySelectiveUndo(
             reason: 'has_children',
             currentValue: String(childCount),
             proposedValue: null,
+          })
+          break
+        }
+        if (
+          !force &&
+          (located.parent?.id !== op.parentId || leafContent(located.node) !== leafContent(op.node))
+        ) {
+          conflicts.push({
+            opIndex,
+            op,
+            nodeId: op.id,
+            field: 'existence',
+            reason: 'concurrent_edit',
           })
           break
         }
