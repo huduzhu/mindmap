@@ -75,11 +75,13 @@ export const TOOLS = [
         baseRev: {
           type: 'integer',
           minimum: 1,
+          maximum: Number.MAX_SAFE_INTEGER,
           description: 'Revision number returned by get_map / get_node / search_nodes.',
         },
         summary: {
           type: 'string',
           minLength: 1,
+          pattern: '\\S',
           description: 'Short human-readable summary of what this batch changes.',
         },
         operations: {
@@ -91,11 +93,11 @@ export const TOOLS = [
                 type: 'object',
                 properties: {
                   type: { const: 'add_node' },
-                  parentId: { type: 'string', minLength: 1 },
-                  id: { type: 'string', minLength: 1 },
-                  title: { type: 'string', minLength: 1 },
+                  parentId: { type: 'string', minLength: 1, pattern: '\\S' },
+                  id: { type: 'string', minLength: 1, pattern: '\\S' },
+                  title: { type: 'string', minLength: 1, pattern: '\\S' },
                   notes: { type: 'string' },
-                  index: { type: 'integer', minimum: 0 },
+                  index: { type: 'integer', minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
                 },
                 required: ['type', 'parentId', 'title'],
                 additionalProperties: false,
@@ -104,8 +106,8 @@ export const TOOLS = [
                 type: 'object',
                 properties: {
                   type: { const: 'rename_node' },
-                  id: { type: 'string', minLength: 1 },
-                  title: { type: 'string', minLength: 1 },
+                  id: { type: 'string', minLength: 1, pattern: '\\S' },
+                  title: { type: 'string', minLength: 1, pattern: '\\S' },
                 },
                 required: ['type', 'id', 'title'],
                 additionalProperties: false,
@@ -114,9 +116,9 @@ export const TOOLS = [
                 type: 'object',
                 properties: {
                   type: { const: 'move_node' },
-                  id: { type: 'string', minLength: 1 },
-                  newParentId: { type: 'string', minLength: 1 },
-                  index: { type: 'integer', minimum: 0 },
+                  id: { type: 'string', minLength: 1, pattern: '\\S' },
+                  newParentId: { type: 'string', minLength: 1, pattern: '\\S' },
+                  index: { type: 'integer', minimum: 0, maximum: Number.MAX_SAFE_INTEGER },
                 },
                 required: ['type', 'id', 'newParentId'],
                 additionalProperties: false,
@@ -125,7 +127,7 @@ export const TOOLS = [
                 type: 'object',
                 properties: {
                   type: { const: 'update_notes' },
-                  id: { type: 'string', minLength: 1 },
+                  id: { type: 'string', minLength: 1, pattern: '\\S' },
                   notes: { type: 'string' },
                 },
                 required: ['type', 'id', 'notes'],
@@ -156,6 +158,17 @@ function isNonNegativeSafeInt(value) {
 function validateOperation(op, index) {
   if (!isPlainObject(op)) {
     return `operations[${index}] must be an object.`
+  }
+  const allowedFields = {
+    add_node: ['type', 'parentId', 'id', 'title', 'notes', 'index'],
+    rename_node: ['type', 'id', 'title'],
+    move_node: ['type', 'id', 'newParentId', 'index'],
+    update_notes: ['type', 'id', 'notes'],
+  }
+  if (typeof op.type !== 'string') return `operations[${index}] must have a string type.`
+  const fields = Object.hasOwn(allowedFields, op.type) ? allowedFields[op.type] : null
+  if (fields && Object.keys(op).some((key) => !fields.includes(key))) {
+    return `operations[${index}] contains unexpected fields.`
   }
   switch (op.type) {
     case 'add_node':
@@ -264,6 +277,9 @@ export function createMcpHandler(relay) {
             'READ_ONLY',
             'The paired project is currently in read-only mode; ask the user to allow edits.',
           )
+        }
+        if (Object.keys(args).some((key) => !['baseRev', 'summary', 'operations'].includes(key))) {
+          return toolErr('INVALID_ARGS', 'propose_edits does not accept additional fields.')
         }
         if (!Number.isSafeInteger(args.baseRev) || args.baseRev < 1) {
           return toolErr(
