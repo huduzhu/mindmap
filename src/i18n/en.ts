@@ -547,6 +547,13 @@ export const en = {
   'present.startTitle': 'Present the map one step at a time (F5)',
   'present.key.swipe': 'Swipe',
   'present.key.twoFingerTap': 'Two-finger tap',
+
+  // Live co-editing (#37): startup menu and badge strings; dialog text lives in en/coedit.ts.
+  'coedit.menu': 'Connect AI agent…',
+  'coedit.badge': '{agent}',
+  'coedit.badgePending.one': '{agent} · {count} pending',
+  'coedit.badgePending.other': '{agent} · {count} pending',
+  'coedit.badgeLabel': 'AI co-editing session: {status}',
 } as const
 
 export type MessageKey = keyof typeof en

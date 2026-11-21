@@ -28,6 +28,8 @@ export interface UiState {
   snapshotsOpen: boolean
   /** The GitHub milestones dialog (#112b). */
   githubOpen: boolean
+  /** The Connect AI agent dialog (#37). */
+  coeditOpen: boolean
   aiDialogOpen: boolean
   /** The branch "Export this branch…" exports (#146); null when closed. */
   branchExport: { section: Section; id: string } | null
@@ -57,6 +59,7 @@ export interface UiState {
   setPresetsOpen: (open: boolean) => void
   setSnapshotsOpen: (open: boolean) => void
   setGithubOpen: (open: boolean) => void
+  setCoeditOpen: (open: boolean) => void
   setAiDialogOpen: (open: boolean) => void
   setBranchExport: (branch: { section: Section; id: string } | null) => void
   setMarkerPicker: (target: MarkerPickerTarget | null) => void
@@ -92,6 +95,7 @@ export const useUi = create<UiState>()((set) => ({
   presetsOpen: false,
   snapshotsOpen: false,
   githubOpen: false,
+  coeditOpen: false,
   aiDialogOpen: false,
   branchExport: null,
   markerPicker: null,
@@ -108,6 +112,7 @@ export const useUi = create<UiState>()((set) => ({
   setPresetsOpen: (presetsOpen) => set({ presetsOpen }),
   setSnapshotsOpen: (snapshotsOpen) => set({ snapshotsOpen }),
   setGithubOpen: (githubOpen) => set({ githubOpen }),
+  setCoeditOpen: (coeditOpen) => set({ coeditOpen }),
   setAiDialogOpen: (aiDialogOpen) => set({ aiDialogOpen }),
   setBranchExport: (branchExport) => set({ branchExport }),
   setMarkerPicker: (markerPicker) => set({ markerPicker }),
@@ -130,6 +135,7 @@ export const useUi = create<UiState>()((set) => ({
       presetsOpen: false,
       snapshotsOpen: false,
       githubOpen: false,
+      coeditOpen: false,
       aiDialogOpen: false,
       branchExport: null,
       markerPicker: null,
@@ -145,6 +151,7 @@ export const useUi = create<UiState>()((set) => ({
       presetsOpen: false,
       snapshotsOpen: false,
       githubOpen: false,
+      coeditOpen: false,
       aiDialogOpen: false,
       branchExport: null,
       markerPicker: null,

@@ -7,6 +7,6 @@
 # (scripts/build-validators.mjs, #181). connect-src data:/blob: lets the
 # PNG/SVG export (html-to-image) fetch the map's own images and fonts.
 /*
-  Content-Security-Policy: default-src 'self'; connect-src 'self' data: blob: https://api.github.com; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; connect-src 'self' data: blob: https://api.github.com http://127.0.0.1:* ws://127.0.0.1:*; img-src 'self' blob: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
