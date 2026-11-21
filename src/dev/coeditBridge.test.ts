@@ -464,7 +464,15 @@ describe('co-edit local bridge relay and MCP server', () => {
     }
     const mcp = createMcpHandler(stubRelay)
 
+    const validOps = [{ type: 'rename_node', id: 'a', title: 'B' }]
     const badPayloads = [
+      { baseRev: 1, summary: ' ', operations: validOps },
+      { baseRev: 1, summary: 'Extra field', operations: validOps, unexpected: true },
+      {
+        baseRev: 1,
+        summary: 'Extra operation field',
+        operations: [{ ...validOps[0], unexpected: true }],
+      },
       {
         baseRev: 0,
         summary: 'zero rev',
