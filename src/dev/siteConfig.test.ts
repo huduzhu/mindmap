@@ -27,6 +27,8 @@ describe('Content-Security-Policy meta tag', () => {
     expect(policy).toContain("object-src 'none'")
     expect(policy).toContain("base-uri 'none'")
     expect(policy).toContain('https://api.github.com')
+    expect(policy).toContain('http://127.0.0.1:*')
+    expect(policy).toContain('ws://127.0.0.1:*')
     expect(policy).not.toContain('frame-ancestors')
   })
 })

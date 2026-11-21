@@ -6,6 +6,7 @@ import type { PresetsDialog } from './PresetsDialog'
 import type { SnapshotsDialog } from './SnapshotsDialog'
 import type { SyncDialog } from './SyncDialog'
 import type { GitHubDialog } from './GitHubDialog'
+import type { CoeditDialog } from './CoeditDialog'
 import { openSyncDialog, useSync } from '../sync/store'
 import type { TrashDialog } from './TrashDialog'
 import { useUi } from '../store/ui'
@@ -67,6 +68,9 @@ const SyncDialogChunk = lazyDialog<ComponentProps<typeof SyncDialog>>(() =>
 )
 const GitHubDialogChunk = lazyDialog<ComponentProps<typeof GitHubDialog>>(() =>
   import('./GitHubDialog').then((m) => ({ default: m.GitHubDialog })),
+)
+const CoeditDialogChunk = lazyDialog<ComponentProps<typeof CoeditDialog>>(() =>
+  import('./CoeditDialog').then((m) => ({ default: m.CoeditDialog })),
 )
 const TrashDialogChunk = lazyDialog<ComponentProps<typeof TrashDialog>>(() =>
   import('./TrashDialog').then((m) => ({ default: m.TrashDialog })),
@@ -216,6 +220,14 @@ export function LazyGitHubDialog(props: ComponentProps<typeof GitHubDialogChunk>
   return (
     <Suspense fallback={<Loading />}>
       <GitHubDialogChunk {...props} />
+    </Suspense>
+  )
+}
+
+export function LazyCoeditDialog(props: ComponentProps<typeof CoeditDialogChunk>) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <CoeditDialogChunk {...props} />
     </Suspense>
   )
 }

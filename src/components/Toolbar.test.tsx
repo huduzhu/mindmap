@@ -588,6 +588,7 @@ describe('Toolbar — grouped menus (#76)', () => {
       'Snapshots (0)…',
       'Sync folder…',
       'Save milestone to GitHub…',
+      'Connect AI agent…',
       'Duplicate',
       'Move to trash…',
     ])
