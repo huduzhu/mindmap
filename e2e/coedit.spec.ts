@@ -3,6 +3,93 @@ import { createMcpHandler } from '../bridge/mcp.mjs'
 import { createBridgeRelay } from '../bridge/relay.mjs'
 import { addChild, mapNode, newProject, projectMenu } from './helpers.ts'
 
+test('reconnects the same project after a dropped connection without replaying pending edits', async ({
+  page,
+}) => {
+  const probe = createBridgeRelay({ port: 0 })
+  const { port } = await probe.start()
+  await probe.stop()
+  const relay = createBridgeRelay({ port, token: 'test-reconnect-code-N2r4V6x8p0Q1' })
+  await relay.start()
+  // Stopping and reopening this listener simulates a transient socket loss
+  // without discarding the bridge instance's in-memory pairing.
+  const replacement = relay
+  try {
+    await newProject(page)
+    await addChild(page, 'Existing branch')
+    await projectMenu(page, 'Connect AI agent…')
+    await page.getByTestId('coedit-port').fill(String(port))
+    await page.getByTestId('coedit-token').fill('test-reconnect-code-N2r4V6x8p0Q1')
+    await page.getByTestId('coedit-mode-approve').check()
+    await page.getByTestId('coedit-connect').click()
+    const dialog = page.getByTestId('coedit-dialog')
+    await expect(page.getByTestId('coedit-connected-summary')).toBeVisible()
+    await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+    const active = relay.getStatus()
+    if (!active.connected) throw new Error('Expected a paired project')
+    const before = await mcpCall(createMcpHandler(relay), 1, 'get_map')
+    const root = before.data.root as MapNode
+    const queued = await mcpCall(createMcpHandler(relay), 2, 'propose_edits', {
+      baseRev: before.data.rev,
+      summary: 'Unapproved proposal',
+      operations: [{ type: 'add_node', parentId: root.id, title: 'Do not replay' }],
+    })
+    expect(queued.data.queued).toBe(true)
+    await relay.stop()
+    await expect(page.getByTestId('coedit-badge')).toContainText('Reconnecting')
+    await mapNode(page, 'Untitled project').click()
+    await addChild(page, 'Human edit while offline')
+    await replacement.start()
+    const { rev: originalRev, ...pairing } = active
+    await expect.poll(() => replacement.getStatus()).toMatchObject(pairing)
+    const resumed = await mcpCall(createMcpHandler(replacement), 3, 'get_map')
+    expect(Number(resumed.data.rev)).toBeGreaterThan(Number(originalRev))
+    await expect(mapNode(page, 'Existing branch')).toBeVisible()
+    await expect(mapNode(page, 'Human edit while offline')).toBeVisible()
+    await expect(mapNode(page, 'Do not replay')).toHaveCount(0)
+    await expect(page.getByTestId('coedit-badge')).not.toContainText('pending')
+    await replacement.stop()
+    await expect(page.getByTestId('coedit-badge')).toContainText('Reconnecting')
+    await page.getByTestId('coedit-badge').click()
+    await page.getByTestId('coedit-disconnect').click()
+    await expect(page.getByTestId('coedit-badge')).toHaveCount(0)
+    await replacement.start()
+    // Wait past the first retry slot to verify Disconnect actually cancels it.
+    await new Promise((resolve) => setTimeout(resolve, 750))
+    await expect(page.getByTestId('coedit-badge')).toHaveCount(0)
+    expect(replacement.getStatus()).toEqual({ connected: false })
+  } finally {
+    await replacement.stop()
+    await relay.stop()
+  }
+})
+
+test('requires manual pairing after a new bridge starts even with the same code', async ({
+  page,
+}) => {
+  const token = 'test-reconnect-code-N2r4V6x8p0Q1'
+  const relay = createBridgeRelay({ port: 0, token })
+  const { port } = await relay.start()
+  const replacement = createBridgeRelay({ port, token })
+  try {
+    await newProject(page)
+    await projectMenu(page, 'Connect AI agent…')
+    await page.getByTestId('coedit-port').fill(String(port))
+    await page.getByTestId('coedit-token').fill(token)
+    await page.getByTestId('coedit-connect').click()
+    await expect(page.getByTestId('coedit-connected-summary')).toBeVisible()
+    await relay.stop()
+    await expect(page.getByTestId('coedit-badge')).toContainText('Reconnecting')
+    await replacement.start()
+    await expect(page.getByTestId('coedit-badge')).toHaveCount(0)
+    await expect(page.getByTestId('coedit-connect')).toBeVisible()
+    expect(replacement.getStatus()).toEqual({ connected: false })
+  } finally {
+    await replacement.stop()
+    await relay.stop()
+  }
+})
+
 interface MapNode {
   id: string
   title: string

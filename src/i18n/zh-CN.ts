@@ -1105,6 +1105,7 @@ export const zhCN: Record<MessageKey, string> = {
   'coedit.badgePending.one': '{agent} · {count} 项待审',
   'coedit.badgePending.other': '{agent} · {count} 项待审',
   'coedit.badgeLabel': 'AI 协同编辑：{status}',
+  'coedit.reconnecting': '正在重新连接 AI 助手…',
   'coedit.title': '连接 AI 助手',
   'coedit.close': '关闭',
   'coedit.intro':

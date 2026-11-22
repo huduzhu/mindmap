@@ -71,6 +71,8 @@ Invoke-RestMethod -Uri "http://127.0.0.1:$port/health" -TimeoutSec 3
 
 ## Security model
 
+If the connection drops unexpectedly and the same project tab remains open, the app shows **Reconnecting…** and makes a limited number of attempts to reach the same bridge. The bridge issues a separate random reconnect credential after pairing; the app keeps it in tab memory and never resends the original pairing code on retry. Unapproved proposals are discarded; saved edits remain. **Disconnect** or leaving the project stops retrying. After a page reload, browser or bridge process restart, or exhausted retries, pair again manually.
+
 - **Loopback only:** Binds exclusively to `127.0.0.1`.
 - **Origin allow-list:** Only accepts requests and WebSocket upgrades from `https://huduzhu.github.io`, `http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:4173`, `http://127.0.0.1:4173`, and explicit `--origin` overrides.
 - **Constant-time token check:** Every browser WebSocket session must present the matching pairing token in its initial `hello` frame.

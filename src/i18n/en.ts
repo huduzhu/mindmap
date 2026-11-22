@@ -551,6 +551,7 @@ export const en = {
   // Live co-editing (#37): startup menu and badge strings; dialog text lives in en/coedit.ts.
   'coedit.menu': 'Connect AI agent…',
   'coedit.badge': '{agent}',
+  'coedit.reconnecting': 'Reconnecting to AI agent…',
   'coedit.badgePending.one': '{agent} · {count} pending',
   'coedit.badgePending.other': '{agent} · {count} pending',
   'coedit.badgeLabel': 'AI co-editing session: {status}',
