@@ -7,6 +7,7 @@ import {
   getCoeditConnectionInfo,
   setBridgeMode,
 } from '../coedit/client'
+import { useCoeditBadge } from '../coedit/badgeStore'
 import { useCoedit } from '../coedit/session'
 import type {
   CoeditConflict,
@@ -48,6 +49,7 @@ function describeOp(op: CoeditOp, map: TreeNode | undefined, t: ReturnType<typeo
 export function CoeditDialog({ onClose }: { onClose: () => void }) {
   const t = useT()
   const current = useProjects((s) => s.current)
+  const reconnecting = useCoeditBadge((s) => s.reconnecting)
   const projectId = useCoedit((s) => s.projectId)
   const agentName = useCoedit((s) => s.agentName)
   const mode = useCoedit((s) => s.mode)
@@ -257,13 +259,17 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
           </>
         ) : (
           <>
-            <p data-testid="coedit-connected-summary">
-              {t('coedit.connectedTo', {
-                agent: agentName ?? 'Hermes',
-                port: connInfo?.port ?? portText,
-                project: current?.name ?? '',
-              })}
-            </p>
+            {reconnecting ? (
+              <p role="status">{t('coedit.reconnecting')}</p>
+            ) : (
+              <p data-testid="coedit-connected-summary">
+                {t('coedit.connectedTo', {
+                  agent: agentName ?? 'Hermes',
+                  port: connInfo?.port ?? portText,
+                  project: current?.name ?? '',
+                })}
+              </p>
+            )}
             <fieldset>
               <legend>{t('coedit.modeLabel')}</legend>
               <label className="dialog-option">
