@@ -20,6 +20,7 @@ import { useProjects } from '../store/projects'
 import { useHasPendingEdits } from '../store/pendingEdits'
 import { useUi } from '../store/ui'
 import {
+  LazyCoeditDialog,
   LazyExportForAiDialog,
   LazyGitHubDialog,
   LazyPresetsDialog,
@@ -27,6 +28,7 @@ import {
   TagFilterChipHost,
   TagFilterHost,
 } from './lazyDialogs'
+import { CoeditBadge } from './CoeditBadge'
 import { SyncBadge } from './SyncBadge'
 import { openSyncDialog, requestSync } from '../sync/store'
 import { RenameInput } from './RenameInput'
@@ -71,6 +73,7 @@ export function Toolbar() {
   const [busy, setBusy] = useState(false)
   const snapshotsOpen = useUi((s) => s.snapshotsOpen)
   const githubOpen = useUi((s) => s.githubOpen)
+  const coeditOpen = useUi((s) => s.coeditOpen)
   const detailsShown = useUi((s) => s.detailsPanel) === 'shown'
   // The tag filter (#150) of the view the keyboard is in.
   const activeSection = useEditor((s) => s.activeSection)
@@ -263,6 +266,11 @@ export function Toolbar() {
       disabled: !current,
     },
     {
+      label: t('coedit.menu'),
+      onSelect: () => useUi.getState().setCoeditOpen(true),
+      disabled: !current,
+    },
+    {
       label: t('menu.duplicate'),
       onSelect: () => currentId && void projects.duplicate(currentId),
       disabled: !currentId,
@@ -324,6 +332,7 @@ export function Toolbar() {
           </span>
         )}
         {current && <SyncBadge />}
+        {current && <CoeditBadge />}
         <span
           className={`status-badge connection-status${isOnline ? '' : ' connection-status-offline'}`}
           role="status"
@@ -467,6 +476,9 @@ export function Toolbar() {
       {presetsOpen && <LazyPresetsDialog onClose={() => setPresetsOpen(false)} />}
       {githubOpen && current && (
         <LazyGitHubDialog onClose={() => useUi.getState().setGithubOpen(false)} />
+      )}
+      {coeditOpen && current && (
+        <LazyCoeditDialog onClose={() => useUi.getState().setCoeditOpen(false)} />
       )}
       {snapshotsOpen && current && (
         <LazySnapshotsDialog onClose={() => useUi.getState().setSnapshotsOpen(false)} />

@@ -2218,6 +2218,88 @@ body:has(.touch-bar) .toast {
   overflow-y: auto;
 }
 
+/* Live human + AI co-editing (#37). */
+.coedit-badge {
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--mms-accent, #2563eb) 35%, transparent);
+  background: color-mix(in srgb, var(--mms-accent, #2563eb) 10%, transparent);
+  font: inherit;
+}
+
+.coedit-badge-pending {
+  border-color: #f59e0b;
+  background: color-mix(in srgb, #f59e0b 18%, transparent);
+}
+
+.coedit-dialog {
+  width: min(580px, calc(100vw - 32px));
+}
+
+.coedit-section {
+  margin-top: 14px;
+}
+
+.coedit-section h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.coedit-card {
+  border: 1px solid var(--mms-node-border, #ddd);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.coedit-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.coedit-notes-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 12rem;
+  overflow: auto;
+}
+
+.coedit-ops {
+  margin: 8px 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+}
+
+.coedit-conflicts {
+  margin-top: 8px;
+  display: grid;
+  gap: 8px;
+}
+
+.coedit-conflict {
+  padding: 8px 10px;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  background: color-mix(in srgb, #f59e0b 10%, transparent);
+  font-size: 0.9rem;
+}
+
+.coedit-conflict-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.coedit-conflict-actions button.primary {
+  background: var(--mms-accent, #2563eb);
+  border-color: var(--mms-accent, #2563eb);
+  color: var(--mms-bg, #fff);
+}
+
 /* Folding in Outline and Brainstorm (#145). */
 .outliner-twisty {
   cursor: pointer;

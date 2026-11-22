@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { lazyImport } from '../pwa/update'
 import { en } from './en'
+import type { coeditMessages } from './en/coedit'
 import type { commandsMessages } from './en/commands'
 import type { exportMessages } from './en/export'
 import type { filesMessages } from './en/files'
@@ -23,6 +24,7 @@ import type { Role } from '../schema/constants'
  */
 export type MessageKey =
   | keyof typeof en
+  | keyof typeof coeditMessages
   | keyof typeof commandsMessages
   | keyof typeof exportMessages
   | keyof typeof filesMessages

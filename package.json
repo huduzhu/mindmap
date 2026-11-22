@@ -54,7 +54,8 @@
     "validate:fixtures": "node scripts/validate-fixtures.mjs",
     "validators": "node scripts/build-validators.mjs",
     "size": "node scripts/check-bundle-size.mjs",
-    "bench": "node scripts/bench-edit.mjs"
+    "bench": "node scripts/bench-edit.mjs",
+    "bridge": "node bridge/index.mjs"
   },
   "dependencies": {
     "@antv/hierarchy": "^0.7.1",

@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import { en as core } from './en'
+import { coeditMessages } from './en/coedit'
 import { commandsMessages } from './en/commands'
 import { exportMessages } from './en/export'
 import { filesMessages } from './en/files'
@@ -33,6 +34,7 @@ import {
 
 /** The area tables (H-0); the test below checks none is left out. */
 const AREAS: Record<string, Record<string, string>> = {
+  coedit: coeditMessages,
   commands: commandsMessages,
   export: exportMessages,
   files: filesMessages,
