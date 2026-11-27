@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { spawn } from 'node:child_process'
+import { createHmac, randomBytes } from 'node:crypto'
 import { once } from 'node:events'
 import { createInterface } from 'node:readline'
 import { PassThrough } from 'node:stream'
@@ -651,5 +652,197 @@ describe('co-edit local bridge relay and MCP server', () => {
         child.kill()
       }
     }
+  })
+
+  it('supports HMAC v1 hot resume and rejects wrong origin or revoked credentials after disconnect', async () => {
+    const { info } = await startTestRelay('hot-resume-token')
+    const wsUrl = `ws://${info.host}:${info.port}/ws`
+
+    const ws1 = await connectSocket(wsUrl, 'http://localhost:5173')
+    const welcome1Promise = nextMessage(ws1)
+    ws1.send(
+      JSON.stringify({
+        type: 'hello',
+        supportsResume: true,
+        token: 'hot-resume-token',
+        projectId: 'proj-1',
+        projectName: 'Launch Plan',
+        mode: 'approve-writes',
+        rev: 1,
+      }),
+    )
+    const welcome1 = await welcome1Promise
+    expect(welcome1.type).toBe('welcome')
+    expect(welcome1.rememberedPairingVersion).toBe(2)
+    expect(typeof welcome1.resumeSecret).toBe('string')
+    const secret = String(welcome1.resumeSecret)
+    expect(secret).toMatch(/^[0-9a-f]{64}$/)
+
+    const ws1Closed = waitForClose(ws1)
+    ws1.close(1000, 'Drop without disconnect')
+    await ws1Closed
+
+    const wrongOriginWs = await connectSocket(wsUrl, 'http://127.0.0.1:5173')
+    const wrongClosed = waitForClose(wrongOriginWs)
+    wrongOriginWs.send(
+      JSON.stringify({ type: 'resume_challenge', nonce: randomBytes(32).toString('hex') }),
+    )
+    expect((await wrongClosed).code).toBe(4001)
+
+    const ws2 = await connectSocket(wsUrl, 'http://localhost:5173')
+    const clientNonce = randomBytes(32).toString('hex')
+    const proofPromise = nextMessage(ws2)
+    ws2.send(JSON.stringify({ type: 'resume_challenge', nonce: clientNonce }))
+    const proofMsg = await proofPromise
+    expect(proofMsg.type).toBe('resume_proof')
+    const expectedServerProof = createHmac('sha256', secret)
+      .update(JSON.stringify(['mindmap-bridge-v1', clientNonce, proofMsg.serverNonce]))
+      .digest('hex')
+    expect(proofMsg.proof).toBe(expectedServerProof)
+
+    const clientProof = createHmac('sha256', secret)
+      .update(
+        JSON.stringify([
+          'mindmap-browser-v1',
+          clientNonce,
+          proofMsg.serverNonce,
+          'proj-1',
+          'Launch Plan',
+          'approve-writes',
+          1,
+        ]),
+      )
+      .digest('hex')
+    const welcome2Promise = nextMessage(ws2)
+    ws2.send(
+      JSON.stringify({
+        type: 'resume_hello',
+        projectId: 'proj-1',
+        projectName: 'Launch Plan',
+        mode: 'approve-writes',
+        rev: 1,
+        proof: clientProof,
+      }),
+    )
+    expect(await welcome2Promise).toEqual({ type: 'welcome', protocolVersion: 1 })
+
+    const ws2Closed = waitForClose(ws2)
+    ws2.send(JSON.stringify({ type: 'disconnect' }))
+    expect((await ws2Closed).code).toBe(1000)
+
+    const ws3 = await connectSocket(wsUrl, 'http://localhost:5173')
+    const revokedClosed = waitForClose(ws3)
+    ws3.send(JSON.stringify({ type: 'resume_challenge', nonce: randomBytes(32).toString('hex') }))
+    expect((await revokedClosed).code).toBe(4001)
+  })
+
+  it('enforces strictly greater rev on HMAC v2 cold resume and tracks monotonic state rev', async () => {
+    const { relay, info } = await startTestRelay('cold-resume-token')
+    const wsUrl = `ws://${info.host}:${info.port}/ws`
+
+    const ws1 = await connectSocket(wsUrl, 'http://localhost:5173')
+    const welcome1Promise = nextMessage(ws1)
+    ws1.send(
+      JSON.stringify({
+        type: 'hello',
+        supportsResume: true,
+        token: 'cold-resume-token',
+        projectId: 'proj-1',
+        projectName: 'Launch Plan',
+        mode: 'approve-writes',
+        rev: 1,
+      }),
+    )
+    const welcome1 = await welcome1Promise
+    const secret = String(welcome1.resumeSecret)
+    expect(secret).toMatch(/^[0-9a-f]{64}$/)
+
+    ws1.send(
+      JSON.stringify({ type: 'state', mode: 'read-only', rev: 4, projectName: 'Launch Plan' }),
+    )
+    await vi.waitFor(() => {
+      expect(relay.getStatus()).toMatchObject({ connected: true, rev: 4, mode: 'read-only' })
+    })
+
+    const ws1Closed = waitForClose(ws1)
+    ws1.close(1000, 'Browser reload')
+    await ws1Closed
+
+    const ws2 = await connectSocket(wsUrl, 'http://localhost:5173')
+    const nonce1 = randomBytes(32).toString('hex')
+    const proof1Promise = nextMessage(ws2)
+    ws2.send(JSON.stringify({ type: 'resume_challenge', nonce: nonce1, version: 2 }))
+    const proof1 = await proof1Promise
+    expect(proof1.lastRev).toBe(4)
+    expect(proof1.proof).toBe(
+      createHmac('sha256', secret)
+        .update(JSON.stringify(['mindmap-bridge-v2', nonce1, proof1.serverNonce, 4]))
+        .digest('hex'),
+    )
+
+    const staleClosed = waitForClose(ws2)
+    const staleClientProof = createHmac('sha256', secret)
+      .update(
+        JSON.stringify([
+          'mindmap-browser-v1',
+          nonce1,
+          proof1.serverNonce,
+          'proj-1',
+          'Launch Plan',
+          'read-only',
+          4,
+        ]),
+      )
+      .digest('hex')
+    ws2.send(
+      JSON.stringify({
+        type: 'resume_hello',
+        projectId: 'proj-1',
+        projectName: 'Launch Plan',
+        mode: 'read-only',
+        rev: 4,
+        proof: staleClientProof,
+      }),
+    )
+    expect((await staleClosed).code).toBe(4001)
+
+    const ws3 = await connectSocket(wsUrl, 'http://localhost:5173')
+    const nonce2 = randomBytes(32).toString('hex')
+    const proof2Promise = nextMessage(ws3)
+    ws3.send(JSON.stringify({ type: 'resume_challenge', nonce: nonce2, version: 2 }))
+    const proof2 = await proof2Promise
+    expect(proof2.lastRev).toBe(4)
+
+    const validClientProof = createHmac('sha256', secret)
+      .update(
+        JSON.stringify([
+          'mindmap-browser-v1',
+          nonce2,
+          proof2.serverNonce,
+          'proj-1',
+          'Launch Plan',
+          'read-only',
+          5,
+        ]),
+      )
+      .digest('hex')
+    const welcome3Promise = nextMessage(ws3)
+    ws3.send(
+      JSON.stringify({
+        type: 'resume_hello',
+        projectId: 'proj-1',
+        projectName: 'Launch Plan',
+        mode: 'read-only',
+        rev: 5,
+        proof: validClientProof,
+      }),
+    )
+    expect(await welcome3Promise).toEqual({ type: 'welcome', protocolVersion: 1 })
+    expect(relay.getStatus()).toMatchObject({
+      connected: true,
+      projectId: 'proj-1',
+      mode: 'read-only',
+      rev: 5,
+    })
   })
 })

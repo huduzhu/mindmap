@@ -1,4 +1,4 @@
-import { randomBytes, timingSafeEqual } from 'node:crypto'
+import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto'
 import { createServer } from 'node:http'
 import { acceptWebSocket } from './ws.mjs'
 
@@ -63,6 +63,7 @@ export function createBridgeRelay(options = {}) {
   const allowedOrigins = new Set([...DEFAULT_ALLOWED_ORIGINS, ...(options.extraOrigins ?? [])])
 
   let session = null
+  let resumeCredential = null
   let rpcSeq = 0
   const pendingRpcs = new Map()
   const activeSockets = new Set()
@@ -159,6 +160,7 @@ export function createBridgeRelay(options = {}) {
 
     activeSockets.add(ws)
     let paired = false
+    let resumeChallenge = null
     const helloTimer = setTimeout(() => {
       if (!paired) ws.close(4008, 'Hello timeout')
     }, helloTimeoutMs)
@@ -178,24 +180,88 @@ export function createBridgeRelay(options = {}) {
       }
 
       if (!paired) {
-        clearTimeout(helloTimer)
-        if (msg.type !== 'hello') {
-          ws.close(4002, 'Expected hello')
+        if (msg.type === 'resume_challenge' && resumeChallenge === null) {
+          if (!resumeCredential || resumeCredential.origin !== origin) {
+            ws.close(4001, 'Pair again to resume')
+            return
+          }
+          if (typeof msg.nonce !== 'string' || !/^[0-9a-f]{64}$/.test(msg.nonce)) {
+            ws.close(4002, 'Invalid resume challenge')
+            return
+          }
+          const serverNonce = randomBytes(32).toString('hex')
+          const lastRev = resumeCredential.rev
+          const cold = msg.version === 2
+          resumeChallenge = { nonces: [msg.nonce, serverNonce], credential: resumeCredential, cold }
+          const proof = createHmac('sha256', resumeCredential.secret)
+            .update(
+              JSON.stringify(
+                cold
+                  ? ['mindmap-bridge-v2', ...resumeChallenge.nonces, lastRev]
+                  : ['mindmap-bridge-v1', ...resumeChallenge.nonces],
+              ),
+            )
+            .digest('hex')
+          ws.sendText(
+            JSON.stringify({
+              type: 'resume_proof',
+              serverNonce,
+              proof,
+              ...(cold ? { lastRev } : {}),
+            }),
+          )
           return
         }
-        if (!tokensMatch(msg.token, token)) {
-          ws.close(4001, 'Invalid pairing token')
+        clearTimeout(helloTimer)
+        if (msg.type !== 'hello' && msg.type !== 'resume_hello') {
+          ws.close(4002, 'Expected hello')
           return
         }
         if (
           typeof msg.projectId !== 'string' ||
           !msg.projectId.trim() ||
           !isValidMode(msg.mode) ||
-          (msg.projectName !== undefined && typeof msg.projectName !== 'string')
+          (msg.projectName !== undefined && typeof msg.projectName !== 'string') ||
+          (msg.type === 'resume_hello' &&
+            (msg.projectId.length > 128 ||
+              typeof msg.projectName !== 'string' ||
+              msg.projectName.length > 512 ||
+              !Number.isSafeInteger(msg.rev) ||
+              msg.rev < 1 ||
+              typeof msg.proof !== 'string' ||
+              !/^[0-9a-f]{64}$/.test(msg.proof)))
         ) {
           ws.close(4002, 'Invalid hello payload')
           return
         }
+        const proven =
+          msg.type === 'resume_hello' &&
+          resumeChallenge &&
+          resumeChallenge.credential === resumeCredential &&
+          msg.projectId === resumeCredential.projectId &&
+          origin === resumeCredential.origin &&
+          (resumeChallenge.cold ? msg.rev > resumeCredential.rev : msg.rev >= resumeCredential.rev)
+            ? tokensMatch(
+                msg.proof,
+                createHmac('sha256', resumeCredential.secret)
+                  .update(
+                    JSON.stringify([
+                      'mindmap-browser-v1',
+                      ...resumeChallenge.nonces,
+                      msg.projectId,
+                      msg.projectName,
+                      msg.mode,
+                      msg.rev,
+                    ]),
+                  )
+                  .digest('hex'),
+              )
+            : msg.type === 'hello' && tokensMatch(msg.token, token)
+        if (!proven) {
+          ws.close(4001, 'Invalid pairing token')
+          return
+        }
+
         if (session !== null) {
           ws.close(4009, 'already_paired')
           return
@@ -209,7 +275,27 @@ export function createBridgeRelay(options = {}) {
           mode: msg.mode,
           rev: typeof msg.rev === 'number' && Number.isFinite(msg.rev) ? msg.rev : 1,
         }
-        ws.sendText(JSON.stringify({ type: 'welcome', protocolVersion: 1 }))
+        if (msg.type === 'hello') {
+          resumeCredential =
+            msg.supportsResume === true
+              ? {
+                  projectId: msg.projectId,
+                  origin,
+                  rev: session.rev,
+                  secret: randomBytes(32).toString('hex'),
+                }
+              : null
+        }
+        if (resumeCredential) resumeCredential.rev = session.rev
+        ws.sendText(
+          JSON.stringify({
+            type: 'welcome',
+            protocolVersion: 1,
+            ...(msg.type === 'hello' && resumeCredential
+              ? { resumeSecret: resumeCredential.secret, rememberedPairingVersion: 2 }
+              : {}),
+          }),
+        )
         return
       }
 
@@ -217,7 +303,10 @@ export function createBridgeRelay(options = {}) {
 
       if (msg.type === 'state') {
         if (isValidMode(msg.mode)) session.mode = msg.mode
-        if (typeof msg.rev === 'number' && Number.isFinite(msg.rev)) session.rev = msg.rev
+        if (Number.isSafeInteger(msg.rev) && msg.rev >= session.rev) {
+          session.rev = msg.rev
+          if (resumeCredential) resumeCredential.rev = msg.rev
+        }
         if (typeof msg.projectName === 'string' && msg.projectName.trim()) {
           session.projectName = msg.projectName
         }
@@ -225,6 +314,7 @@ export function createBridgeRelay(options = {}) {
       }
 
       if (msg.type === 'disconnect') {
+        resumeCredential = null
         clearSession(ws)
         ws.close(1000, 'Disconnected')
         return

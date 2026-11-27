@@ -27,7 +27,12 @@ export interface CoeditSessionState {
   lastObservedMap: TreeNode | null
   pendingBatches: CoeditBatch[]
   activity: CoeditActivityEntry[]
-  startSession: (projectId: string, agentName: string, mode: CoeditMode) => boolean
+  startSession: (
+    projectId: string,
+    agentName: string,
+    mode: CoeditMode,
+    initialRev?: number,
+  ) => boolean
   setMode: (mode: CoeditMode) => void
   disconnect: () => void
   syncFromCurrentTree: () => RevisionTrackerState | null
@@ -53,14 +58,14 @@ const DISCONNECTED_STATE = {
 export const useCoedit = create<CoeditSessionState>()((set, get) => ({
   ...DISCONNECTED_STATE,
 
-  startSession: (projectId, agentName, mode) => {
+  startSession: (projectId, agentName, mode, initialRev) => {
     const { currentId, current } = useProjects.getState()
     if (!projectId || currentId !== projectId || !current) return false
     set({
       projectId,
       agentName,
       mode,
-      tracker: createRevisionTracker(projectId, current.map),
+      tracker: createRevisionTracker(projectId, current.map, initialRev),
       lastObservedMap: current.map,
       pendingBatches: [],
       activity: [],

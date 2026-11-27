@@ -8,11 +8,13 @@ export function CoeditBadge() {
   const connected = useCoeditBadge((s) => s.connected)
   const pendingCount = useCoeditBadge((s) => s.pendingCount)
   const agentName = useCoeditBadge((s) => s.agentName)
-  if (!connected) return null
+  const reconnecting = useCoeditBadge((s) => s.reconnecting)
+  if (!connected && !reconnecting) return null
 
   const agent = agentName ?? 'AI'
-  const label =
-    pendingCount > 0
+  const label = reconnecting
+    ? t('coedit.reconnecting')
+    : pendingCount > 0
       ? tn('coedit.badgePending', pendingCount, { agent })
       : t('coedit.badge', { agent })
 
