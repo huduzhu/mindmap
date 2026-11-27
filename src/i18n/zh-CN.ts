@@ -1106,6 +1106,11 @@ export const zhCN: Record<MessageKey, string> = {
   'coedit.badgePending.other': '{agent} · {count} 项待审',
   'coedit.badgeLabel': 'AI 协同编辑：{status}',
   'coedit.reconnecting': '正在重新连接 AI 助手…',
+  'coedit.rememberPairing': '在此浏览器中记住当前项目',
+  'coedit.resumeRemembered': '以只读模式重新连接',
+  'coedit.forgetPairing': '仅移除此浏览器中的配对',
+  'coedit.disconnectAndForget': '断开并忘记',
+  'coedit.rememberFailed': '已连接，但此浏览器无法保存配对。',
   'coedit.title': '连接 AI 助手',
   'coedit.close': '关闭',
   'coedit.intro':

@@ -31,14 +31,15 @@ function indexTree(root: TreeNode): Map<string, IndexedNode> {
 export function createRevisionTracker(
   projectId: string,
   initialTree: TreeNode,
+  initialRev = 1,
 ): RevisionTrackerState {
   const fields: Record<string, NodeFieldRevs> = {}
   for (const id of indexTree(initialTree).keys()) {
-    fields[id] = { title: 1, notes: 1, parent: 1 }
+    fields[id] = { title: initialRev, notes: initialRev, parent: initialRev }
   }
   return {
     projectId,
-    rev: 1,
+    rev: initialRev,
     fields,
     deletedAtRev: {},
   }

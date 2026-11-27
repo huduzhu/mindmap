@@ -2,6 +2,11 @@ import { flushPendingEdits } from '../store/pendingEdits'
 import { useProjects } from '../store/projects'
 import { newId } from '../store/treeOps'
 import { DEFAULT_BADGE_STATE, useCoeditBadge } from './badgeStore'
+import {
+  forgetRememberedPairing,
+  rememberedPairing,
+  storeRememberedPairing,
+} from './rememberedPairing'
 import { searchNodesForAgent, serializeMapForAgent, serializeNodeForAgent } from './serialize'
 import { useCoedit } from './session'
 import type { CoeditBatch, CoeditMode, CoeditOp } from './types'
@@ -29,6 +34,7 @@ export interface ConnectBridgeOptions {
   mode: CoeditMode
   agentName?: string
   connectTimeoutMs?: number
+  remember?: boolean
 }
 
 interface BridgeRpcMessage {
@@ -37,8 +43,10 @@ interface BridgeRpcMessage {
   method?: unknown
   params?: unknown
   resumeSecret?: unknown
+  rememberedPairingVersion?: unknown
   serverNonce?: unknown
   proof?: unknown
+  lastRev?: unknown
 }
 
 function hex(bytes: Uint8Array): string {
@@ -50,6 +58,7 @@ let activePort: number | null = null
 let unsubscribeProjects: (() => void) | null = null
 let unsubscribeCoedit: (() => void) | null = null
 let connectionSeq = 0
+let revisionFloor = 1
 let cancelPendingConnection: (() => void) | null = null
 let retryTimer: number | undefined
 let unsubscribeRetryProject: (() => void) | undefined
@@ -250,7 +259,28 @@ export function cancelBridgePairing(): void {
   if (!unsubscribeRetryProject) cancelPendingConnection?.()
 }
 
+export function disconnectAndForget(projectId: string): void {
+  forgetRememberedPairing(projectId)
+  disconnectBridge()
+}
+
+export function resumeRememberedBridge(projectId: string): Promise<void> {
+  const pairing = rememberedPairing(projectId)
+  if (!pairing)
+    return Promise.reject(new CoeditConnectionError('invalid_token', 'No remembered pairing.'))
+  return openBridge(
+    { port: pairing.port, token: '', mode: 'read-only' },
+    projectId,
+    pairing.secret,
+    true,
+  )
+}
+
 export function disconnectBridge(): void {
+  closeBridge(true)
+}
+
+function closeBridge(revoke: boolean): void {
   connectionSeq += 1
   stopRetry()
   cancelPendingConnection?.()
@@ -258,7 +288,7 @@ export function disconnectBridge(): void {
   cleanupConnection()
   if (socket && socket.readyState === WebSocket.OPEN) {
     try {
-      socket.send(JSON.stringify({ type: 'disconnect' }))
+      if (revoke) socket.send(JSON.stringify({ type: 'disconnect' }))
       socket.close(1000, 'Disconnected')
     } catch {
       // Socket may already be closing.
@@ -282,6 +312,7 @@ function openBridge(
   options: ConnectBridgeOptions,
   resumeProjectId?: string,
   resumeSecret?: string,
+  coldResume = false,
 ): Promise<void> {
   const { port, token, mode, agentName = 'Hermes', connectTimeoutMs = 5_000 } = options
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
@@ -290,7 +321,7 @@ function openBridge(
     )
   }
   const trimmedToken = token.trim()
-  if (!trimmedToken) {
+  if (!trimmedToken && !resumeSecret) {
     return Promise.reject(
       new CoeditConnectionError('empty_token', 'Enter the pairing token from the bridge.'),
     )
@@ -300,7 +331,10 @@ function openBridge(
     return Promise.reject(new CoeditConnectionError('no_project', 'Open a project before pairing.'))
   }
 
-  if (!resumeProjectId) disconnectBridge()
+  if (!resumeProjectId || coldResume) {
+    disconnectBridge()
+    revisionFloor = 1
+  }
   const mySeq = ++connectionSeq
   const boundProjectId = currentId
 
@@ -309,6 +343,7 @@ function openBridge(
     let welcomed = false
     let resumeNonce: string | undefined
     let resumeVerified = false
+    let coldRev: number | undefined
     let ws: WebSocket
     try {
       ws = new WebSocket(`ws://127.0.0.1:${port}/ws`)
@@ -355,7 +390,13 @@ function openBridge(
       }
       if (resumeProjectId) {
         resumeNonce = hex(crypto.getRandomValues(new Uint8Array(32)))
-        ws.send(JSON.stringify({ type: 'resume_challenge', nonce: resumeNonce }))
+        ws.send(
+          JSON.stringify({
+            type: 'resume_challenge',
+            nonce: resumeNonce,
+            ...(coldResume ? { version: 2 } : {}),
+          }),
+        )
         return
       }
       ws.send(
@@ -382,12 +423,20 @@ function openBridge(
 
       if (!welcomed) {
         if (resumeProjectId && !resumeVerified) {
-          const { serverNonce, proof } = msg
+          const { serverNonce, proof, lastRev } = msg
+          const nextRev =
+            typeof lastRev === 'number' &&
+            Number.isSafeInteger(lastRev) &&
+            lastRev >= 1 &&
+            lastRev < Number.MAX_SAFE_INTEGER - 1
+              ? lastRev + 1
+              : undefined
           if (
             msg.type !== 'resume_proof' ||
             !resumeNonce ||
             typeof serverNonce !== 'string' ||
             !/^[0-9a-f]{64}$/.test(serverNonce) ||
+            (coldResume && nextRev === undefined) ||
             typeof proof !== 'string' ||
             !/^[0-9a-f]{64}$/.test(proof)
           ) {
@@ -414,7 +463,13 @@ function openBridge(
                 'HMAC',
                 key,
                 signature,
-                encoder.encode(JSON.stringify(['mindmap-bridge-v1', ...nonces])),
+                encoder.encode(
+                  JSON.stringify(
+                    coldResume
+                      ? ['mindmap-bridge-v2', ...nonces, lastRev]
+                      : ['mindmap-bridge-v1', ...nonces],
+                  ),
+                ),
               ))
             ) {
               throw new Error('Could not verify the bridge.')
@@ -423,10 +478,12 @@ function openBridge(
             flushPendingEdits()
             const tracker = useCoedit.getState().syncFromCurrentTree()
             const latest = useProjects.getState()
-            if (!tracker || !latest.current || latest.currentId !== boundProjectId) return
+            if ((!tracker && !coldResume) || !latest.current || latest.currentId !== boundProjectId)
+              return
             const projectName = latest.current.name
-            const resumeMode = useCoedit.getState().mode
-            const rev = tracker.rev
+            const resumeMode = coldResume ? mode : useCoedit.getState().mode
+            const rev = (coldResume ? nextRev : tracker?.rev) ?? 1
+            if (coldResume) coldRev = rev
             const signed = await crypto.subtle.sign(
               'HMAC',
               key,
@@ -474,15 +531,23 @@ function openBridge(
           finishReject('no_project', 'Project closed while connecting.')
           return
         }
-        const ready = resumeProjectId
-          ? useCoedit.getState().syncFromCurrentTree() !== null
-          : useCoedit.getState().startSession(boundProjectId, agentName, mode)
+        const ready =
+          resumeProjectId && !coldResume
+            ? useCoedit.getState().syncFromCurrentTree() !== null
+            : useCoedit.getState().startSession(boundProjectId, agentName, mode, coldRev)
         if (!ready) {
           ws.close(1000, 'Session failed')
           finishReject('connection_failed', 'Could not start co-editing session.')
           return
         }
 
+        if (coldRev !== undefined) revisionFloor = coldRev
+        if (!resumeProjectId) {
+          forgetRememberedPairing(boundProjectId)
+          if (options.remember && resumeSecret && msg.rememberedPairingVersion === 2) {
+            storeRememberedPairing({ projectId: boundProjectId, port, secret: resumeSecret })
+          }
+        }
         welcomed = true
         clearPendingConnection()
         stopRetry()
@@ -518,9 +583,13 @@ function openBridge(
           }
         }
 
+        const closeOnProjectChange = () => {
+          const saved = rememberedPairing(boundProjectId)
+          closeBridge(!saved || saved.port !== port || saved.secret !== resumeSecret)
+        }
         unsubscribeProjects = useProjects.subscribe((state, prev) => {
           if (state.currentId !== boundProjectId || !state.current) {
-            disconnectBridge()
+            closeOnProjectChange()
             return
           }
           if (state.current.map !== prev.current?.map) {
@@ -550,7 +619,8 @@ function openBridge(
 
       if (useProjects.getState().currentId !== boundProjectId) {
         sendRpcError(rpcId, 'NOT_CONNECTED', 'Paired project is no longer open.')
-        disconnectBridge()
+        const saved = rememberedPairing(boundProjectId)
+        closeBridge(!saved || saved.port !== port || saved.secret !== resumeSecret)
         return
       }
 
@@ -603,6 +673,10 @@ function openBridge(
           const validated = validateProposalParams(rpcParams)
           if (!validated.ok) {
             sendRpcError(rpcId, 'INVALID_ARGS', validated.message)
+            break
+          }
+          if (validated.baseRev < revisionFloor || validated.baseRev > tracker.rev) {
+            sendRpcError(rpcId, 'STALE_REVISION', 'Read the current map before proposing edits.')
             break
           }
           const batch: CoeditBatch = {

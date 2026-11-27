@@ -71,7 +71,13 @@ Invoke-RestMethod -Uri "http://127.0.0.1:$port/health" -TimeoutSec 3
 
 ## Security model
 
-If the connection drops unexpectedly and the same project tab remains open, the app shows **Reconnecting…** and makes a limited number of attempts to reach the same bridge. The bridge issues a separate random reconnect credential after pairing; the app keeps it in tab memory and never resends the original pairing code on retry. Unapproved proposals are discarded; saved edits remain. **Disconnect** or leaving the project stops retrying. After a page reload, browser or bridge process restart, or exhausted retries, pair again manually.
+### Remember a project in the local browser
+
+On the loopback app (`127.0.0.1` or `localhost`), opt in to **Remember this project in this browser** when pairing. After a tab reload or Edge restart, open that same project at the same address and choose **Project → Connect AI agent… → Reconnect read-only**. You don't need to reenter the code. Switch to **Approve writes** only if you want to review proposals; the agent must reread the map before proposing edits again.
+
+The browser remembers one project pairing for that app address. It saves a separate random reconnect credential, not the original code; the credential is available to scripts on that local origin, so use this option only with a trusted local app and browser profile. **Disconnect and forget** clears the browser copy and requests revocation over an open connection. **Remove pairing from this browser only** clears the browser copy while offline; it does not revoke the relay copy. To invalidate that copy without a working connection, restart the bridge. Restarting the bridge process invalidates remembered credentials; pair again with the code. Hosted app origins do not offer this option.
+
+If the connection drops unexpectedly and the same project tab remains open, the app shows **Reconnecting…** and makes a limited number of attempts to reach the same bridge. The bridge issues a separate random reconnect credential after pairing; the app keeps it in tab memory and never resends the original pairing code on retry. Unapproved proposals are discarded; saved edits remain. **Disconnect** or leaving the project stops retrying. After a page reload, browser restart, or exhausted retries, reconnect using the saved pairing if you opted in; otherwise pair again with the code. A bridge process restart always requires the code.
 
 - **Loopback only:** Binds exclusively to `127.0.0.1`.
 - **Origin allow-list:** Only accepts requests and WebSocket upgrades from `https://huduzhu.github.io`, `http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:4173`, `http://127.0.0.1:4173`, and explicit `--origin` overrides.

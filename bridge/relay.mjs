@@ -181,7 +181,7 @@ export function createBridgeRelay(options = {}) {
 
       if (!paired) {
         if (msg.type === 'resume_challenge' && resumeChallenge === null) {
-          if (!resumeCredential) {
+          if (!resumeCredential || resumeCredential.origin !== origin) {
             ws.close(4001, 'Pair again to resume')
             return
           }
@@ -190,11 +190,26 @@ export function createBridgeRelay(options = {}) {
             return
           }
           const serverNonce = randomBytes(32).toString('hex')
+          const lastRev = resumeCredential.rev
           resumeChallenge = { nonces: [msg.nonce, serverNonce], credential: resumeCredential }
+          const cold = msg.version === 2
           const proof = createHmac('sha256', resumeCredential.secret)
-            .update(JSON.stringify(['mindmap-bridge-v1', ...resumeChallenge.nonces]))
+            .update(
+              JSON.stringify(
+                cold
+                  ? ['mindmap-bridge-v2', ...resumeChallenge.nonces, lastRev]
+                  : ['mindmap-bridge-v1', ...resumeChallenge.nonces],
+              ),
+            )
             .digest('hex')
-          ws.sendText(JSON.stringify({ type: 'resume_proof', serverNonce, proof }))
+          ws.sendText(
+            JSON.stringify({
+              type: 'resume_proof',
+              serverNonce,
+              proof,
+              ...(cold ? { lastRev } : {}),
+            }),
+          )
           return
         }
         clearTimeout(helloTimer)
@@ -223,7 +238,9 @@ export function createBridgeRelay(options = {}) {
           msg.type === 'resume_hello' &&
           resumeChallenge &&
           resumeChallenge.credential === resumeCredential &&
-          msg.projectId === resumeCredential.projectId
+          msg.projectId === resumeCredential.projectId &&
+          origin === resumeCredential.origin &&
+          msg.rev >= resumeCredential.rev
             ? tokensMatch(
                 msg.proof,
                 createHmac('sha256', resumeCredential.secret)
@@ -261,15 +278,21 @@ export function createBridgeRelay(options = {}) {
         if (msg.type === 'hello') {
           resumeCredential =
             msg.supportsResume === true
-              ? { projectId: msg.projectId, secret: randomBytes(32).toString('hex') }
+              ? {
+                  projectId: msg.projectId,
+                  origin,
+                  rev: session.rev,
+                  secret: randomBytes(32).toString('hex'),
+                }
               : null
         }
+        if (resumeCredential) resumeCredential.rev = session.rev
         ws.sendText(
           JSON.stringify({
             type: 'welcome',
             protocolVersion: 1,
             ...(msg.type === 'hello' && resumeCredential
-              ? { resumeSecret: resumeCredential.secret }
+              ? { resumeSecret: resumeCredential.secret, rememberedPairingVersion: 2 }
               : {}),
           }),
         )
@@ -280,7 +303,10 @@ export function createBridgeRelay(options = {}) {
 
       if (msg.type === 'state') {
         if (isValidMode(msg.mode)) session.mode = msg.mode
-        if (typeof msg.rev === 'number' && Number.isFinite(msg.rev)) session.rev = msg.rev
+        if (Number.isSafeInteger(msg.rev) && msg.rev >= session.rev) {
+          session.rev = msg.rev
+          if (resumeCredential) resumeCredential.rev = msg.rev
+        }
         if (typeof msg.projectName === 'string' && msg.projectName.trim()) {
           session.projectName = msg.projectName
         }

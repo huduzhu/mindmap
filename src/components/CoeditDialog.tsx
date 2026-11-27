@@ -3,11 +3,18 @@ import {
   cancelBridgePairing,
   CoeditConnectionError,
   connectToBridge,
+  disconnectAndForget,
   disconnectBridge,
+  resumeRememberedBridge,
   getCoeditConnectionInfo,
   setBridgeMode,
 } from '../coedit/client'
 import { useCoeditBadge } from '../coedit/badgeStore'
+import {
+  canRememberPairing,
+  forgetRememberedPairing,
+  rememberedPairing,
+} from '../coedit/rememberedPairing'
 import { useCoedit } from '../coedit/session'
 import type {
   CoeditConflict,
@@ -49,6 +56,7 @@ function describeOp(op: CoeditOp, map: TreeNode | undefined, t: ReturnType<typeo
 export function CoeditDialog({ onClose }: { onClose: () => void }) {
   const t = useT()
   const current = useProjects((s) => s.current)
+  const currentId = useProjects((s) => s.currentId)
   const reconnecting = useCoeditBadge((s) => s.reconnecting)
   const projectId = useCoedit((s) => s.projectId)
   const agentName = useCoedit((s) => s.agentName)
@@ -56,8 +64,13 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
   const pendingBatches = useCoedit((s) => s.pendingBatches)
   const activity = useCoedit((s) => s.activity)
 
-  const [portText, setPortText] = useState(() => String(getCoeditConnectionInfo()?.port ?? 4317))
+  const savedPairing = currentId ? rememberedPairing(currentId) : null
+  const [portText, setPortText] = useState(() =>
+    String(getCoeditConnectionInfo()?.port ?? savedPairing?.port ?? 4317),
+  )
   const [token, setToken] = useState('')
+  const [remember, setRemember] = useState(false)
+  const [, refreshRemembered] = useState(0)
   const [connectMode, setConnectMode] = useState<CoeditMode>('approve-writes')
   const [busy, setBusy] = useState(false)
   const [connectError, setConnectError] = useState<string | null>(null)
@@ -74,13 +87,20 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
   useEffect(() => cancelBridgePairing, [])
   useDialogA11y(dialogRef, { isOpen: true, onClose, labelledBy: titleId })
 
-  const handleConnect = () => {
+  const handleConnect = (resume = false) => {
     const port = Number(portText.trim())
     setBusy(true)
     setConnectError(null)
-    void connectToBridge({ port, token, mode: connectMode })
+    const connection =
+      resume && currentId
+        ? resumeRememberedBridge(currentId)
+        : connectToBridge({ port, token, mode: connectMode, remember })
+    void connection
       .then(() => {
         setToken('')
+        if (!resume && remember && currentId && !rememberedPairing(currentId)) {
+          setConnectError(t('coedit.rememberFailed'))
+        }
       })
       .catch((err: unknown) => {
         if (err instanceof CoeditConnectionError) {
@@ -184,6 +204,28 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
         {!isConnected ? (
           <>
             <p>{t('coedit.intro')}</p>
+            {savedPairing && currentId ? (
+              <div className="dialog-actions">
+                <button
+                  type="button"
+                  disabled={busy}
+                  data-testid="coedit-resume-remembered"
+                  onClick={() => handleConnect(true)}
+                >
+                  {t('coedit.resumeRemembered')}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    forgetRememberedPairing(currentId)
+                    refreshRemembered((count) => count + 1)
+                  }}
+                >
+                  {t('coedit.forgetPairing')}
+                </button>
+              </div>
+            ) : null}
             <label className="prompt-dialog-field">
               <span>{t('coedit.port')}</span>
               <input
@@ -207,6 +249,17 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
                 data-testid="coedit-token"
               />
             </label>
+            {canRememberPairing() ? (
+              <label className="dialog-option">
+                <input
+                  type="checkbox"
+                  data-testid="coedit-remember"
+                  checked={remember}
+                  onChange={(event) => setRemember(event.target.checked)}
+                />
+                <span>{t('coedit.rememberPairing')}</span>
+              </label>
+            ) : null}
             <fieldset>
               <legend>{t('coedit.modeLabel')}</legend>
               <label className="dialog-option">
@@ -250,7 +303,7 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
                 type="button"
                 className="primary"
                 disabled={busy || !current}
-                onClick={handleConnect}
+                onClick={() => handleConnect()}
                 data-testid="coedit-connect"
               >
                 {busy ? t('coedit.connecting') : t('coedit.connect')}
@@ -296,6 +349,7 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
               </label>
             </fieldset>
 
+            {connectError ? <p role="alert">{connectError}</p> : null}
             <section className="coedit-section">
               <h3>{t('coedit.pendingTitle')}</h3>
               {pendingBatches.length === 0 ? (
@@ -486,10 +540,10 @@ export function CoeditDialog({ onClose }: { onClose: () => void }) {
               <button
                 type="button"
                 className="danger"
-                onClick={() => disconnectBridge()}
+                onClick={() => (currentId ? disconnectAndForget(currentId) : disconnectBridge())}
                 data-testid="coedit-disconnect"
               >
-                {t('coedit.disconnect')}
+                {t(savedPairing ? 'coedit.disconnectAndForget' : 'coedit.disconnect')}
               </button>
               <button type="button" onClick={onClose}>
                 {t('coedit.close')}

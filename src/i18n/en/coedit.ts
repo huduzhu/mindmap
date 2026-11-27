@@ -5,6 +5,12 @@ import { registerMessages } from '../index'
  * chunk alongside CoeditDialog so the startup bundle stays unchanged.
  */
 export const coeditMessages = {
+  'coedit.rememberPairing': 'Remember this project in this browser',
+  'coedit.resumeRemembered': 'Reconnect read-only',
+  'coedit.forgetPairing': 'Remove pairing from this browser only',
+  'coedit.disconnectAndForget': 'Disconnect and forget',
+  'coedit.rememberFailed':
+    'Connected, but the pairing could not be saved. Check your browser storage and bridge version.',
   'coedit.title': 'Connect AI agent',
   'coedit.close': 'Close',
   'coedit.intro':
