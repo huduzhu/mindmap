@@ -1110,7 +1110,7 @@ export const zhCN: Record<MessageKey, string> = {
   'coedit.resumeRemembered': '以只读模式重新连接',
   'coedit.forgetPairing': '仅移除此浏览器中的配对',
   'coedit.disconnectAndForget': '断开并忘记',
-  'coedit.rememberFailed': '已连接，但此浏览器无法保存配对。',
+  'coedit.rememberFailed': '已连接，但无法保存配对。请检查浏览器存储和桥接器版本。',
   'coedit.title': '连接 AI 助手',
   'coedit.close': '关闭',
   'coedit.intro':

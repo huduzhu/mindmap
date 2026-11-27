@@ -543,7 +543,7 @@ function openBridge(
 
         if (coldRev !== undefined) revisionFloor = coldRev
         if (!resumeProjectId) {
-          forgetRememberedPairing(boundProjectId)
+          forgetRememberedPairing(boundProjectId, port)
           if (options.remember && resumeSecret && msg.rememberedPairingVersion === 2) {
             storeRememberedPairing({ projectId: boundProjectId, port, secret: resumeSecret })
           }

@@ -191,8 +191,8 @@ export function createBridgeRelay(options = {}) {
           }
           const serverNonce = randomBytes(32).toString('hex')
           const lastRev = resumeCredential.rev
-          resumeChallenge = { nonces: [msg.nonce, serverNonce], credential: resumeCredential }
           const cold = msg.version === 2
+          resumeChallenge = { nonces: [msg.nonce, serverNonce], credential: resumeCredential, cold }
           const proof = createHmac('sha256', resumeCredential.secret)
             .update(
               JSON.stringify(
@@ -240,7 +240,7 @@ export function createBridgeRelay(options = {}) {
           resumeChallenge.credential === resumeCredential &&
           msg.projectId === resumeCredential.projectId &&
           origin === resumeCredential.origin &&
-          msg.rev >= resumeCredential.rev
+          (resumeChallenge.cold ? msg.rev > resumeCredential.rev : msg.rev >= resumeCredential.rev)
             ? tokensMatch(
                 msg.proof,
                 createHmac('sha256', resumeCredential.secret)
